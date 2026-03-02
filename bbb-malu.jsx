@@ -269,6 +269,7 @@ export default function App() {
         return null;
     });
     const [showIdentity, setShowIdentity] = useState(false);
+    const [identityConfirm, setIdentityConfirm] = useState(null); // participante selecionado para confirmar
     const [showIaModal, setShowIaModal] = useState(false);
     const [iaPrompt, setIaPrompt] = useState("");
     const [iaSelParts, setIaSelParts] = useState([]); // max 4
@@ -389,6 +390,13 @@ export default function App() {
             fetchGaleria();
         }
     }, []);
+
+    // Mostra modal de identidade no primeiro acesso
+    useEffect(() => {
+        if (appReady && !meId && parts.length > 0) {
+            setShowIdentity(true);
+        }
+    }, [appReady, meId, parts.length]);
 
     // Carrega dados da API (PostgreSQL) com fallback para localStorage
     useEffect(() => {
@@ -1647,20 +1655,20 @@ export default function App() {
                 </Modal>
             )}
 
-            {/* ══ MODAL: Quem é você? ══ */}
-            {showIdentity && (
-                <Modal onClose={() => setShowIdentity(false)}>
+            {/* ══ MODAL: Quem é você? — Step 1: Selecionar ══ */}
+            {showIdentity && !identityConfirm && (
+                <Modal onClose={() => { }}>
                     <div style={{ textAlign: "center", marginBottom: 16 }}>
                         <div style={{ fontSize: 40, marginBottom: 8 }}>👤</div>
                         <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Quem é você?</h3>
-                        <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Selecione seu nome para usar o gerador de ilustrações IA</p>
+                        <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Selecione seu nome para continuar</p>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10, maxHeight: "60vh", overflowY: "auto", padding: "4px" }}>
                         {parts.map(p => {
                             const isElim = calcStatus(p.palpite) === "Eliminado";
                             const fotoUrl = p.fotos?.[0] || null;
                             return (
-                                <button key={p.id} onClick={() => { saveMeId(p.id); setShowIdentity(false); openIa(); }}
+                                <button key={p.id} onClick={() => setIdentityConfirm(p)}
                                     style={{
                                         background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
                                         padding: 6, cursor: "pointer", textAlign: "center", transition: "all .15s",
@@ -1693,6 +1701,57 @@ export default function App() {
                                 </button>
                             );
                         })}
+                    </div>
+                </Modal>
+            )}
+
+            {/* ══ MODAL: Confirmar identidade — Step 2 ══ */}
+            {showIdentity && identityConfirm && (
+                <Modal onClose={() => setIdentityConfirm(null)}>
+                    <div style={{ textAlign: "center", marginBottom: 20 }}>
+                        <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
+                        <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Você é <span style={{ color: C.pinkLt }}>{identityConfirm.nome}</span>?</h3>
+                    </div>
+
+                    {/* Foto do participante */}
+                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                        <div style={{ width: 140, height: 140, borderRadius: 16, overflow: "hidden", border: `3px solid ${C.pinkLt}`, boxShadow: `0 0 24px rgba(200,100,150,0.3)` }}>
+                            {identityConfirm.fotos?.[0] ? (
+                                <img src={identityConfirm.fotos[0]} alt={identityConfirm.nome}
+                                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                            ) : (
+                                <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, color: C.text }}>
+                                    {identityConfirm.nome?.[0]}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Aviso permanente */}
+                    <div style={{
+                        background: "rgba(200,144,64,0.12)", border: "1px solid rgba(200,144,64,0.3)",
+                        borderRadius: 12, padding: "12px 14px", marginBottom: 20, textAlign: "center",
+                    }}>
+                        <p style={{ color: "#C89040", fontSize: 13, fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
+                            ⚠️ Atenção: esta escolha é definitiva. Depois de confirmar, o app vai sempre reconhecer que é você quem está usando. Não será possível trocar de identidade.
+                        </p>
+                    </div>
+
+                    {/* Botões */}
+                    <div style={{ display: "flex", gap: 10 }}>
+                        <Btn onClick={() => setIdentityConfirm(null)}
+                            color={C.surface} textColor={C.textMut}
+                            style={{ flex: 1, border: `1px solid ${C.border}` }}>
+                            ← Voltar
+                        </Btn>
+                        <Btn onClick={() => {
+                            saveMeId(identityConfirm.id);
+                            setIdentityConfirm(null);
+                            setShowIdentity(false);
+                            showToast(`Bem-vindo(a), ${identityConfirm.nome}! 🎉`);
+                        }} style={{ flex: 1 }}>
+                            ✅ Confirmar, sou eu!
+                        </Btn>
                     </div>
                 </Modal>
             )}

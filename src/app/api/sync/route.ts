@@ -22,7 +22,7 @@ export async function GET() {
             fotos: p.fotos.map((f) => f.url),
         }));
 
-        const cfg = config || { prdFotos: "", appName: "Big Brother Malú", appUrl: "" };
+        const cfg = config || { prdFotos: "", prdIlustracoes: "", appName: "Big Brother Malú", appUrl: "" };
 
         return NextResponse.json({
             parts,
