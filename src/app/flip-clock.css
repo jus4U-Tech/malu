@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FlipClock — CSS
+   Proportional auto-sizing: ALL dimensions derive from --card-w.
+   The component scales uniformly without stretching or cropping.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Outer wrapper — container query context ─────────────────────────────── */
+.flip-clock-wrapper {
+  container-type: size;
+  container-name: flipclock;
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+/* ── Single-variable proportional system ─────────────────────────────────── */
+/* All dims derive from --card-w. The card ratio is always 1:1.32.         */
+.flip-chassis {
+  --card-w: min(8cqi, calc(72cqi / var(--num-cards, 6)), calc(45cqb / 1.32));
+
+  /* Derived — locked aspect ratio */
+  --card-h: calc(var(--card-w) * 1.32);
+  --card-r: calc(var(--card-w) * 0.08);
+  --card-gap: calc(var(--card-w) * 0.14);
+  --group-gap: calc(var(--card-w) * 0.30);
+  --chassis-pad: calc(var(--card-w) * 0.42);
+  --dot-size: calc(var(--card-w) * 0.08);
+  --label-size: calc(var(--card-w) * 0.12);
+  --font-size: calc(var(--card-h) * 0.74);
+  --half-h: calc(var(--card-h) / 2);
+
+  /* Clip tabs & frame — proportional */
+  --clip-w: calc(var(--card-w) * 0.11);
+  --clip-h: calc(var(--card-w) * 0.24);
+  --clip-r: calc(var(--card-w) * 0.04);
+  --clip-pos: calc(var(--card-w) * 0.07);
+  --frame-inset: calc(var(--card-w) * 0.055);
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────────────── */
+@keyframes flipCard {
+  0% {
+    transform: perspective(400px) rotateX(0deg);
+  }
+
+  100% {
+    transform: perspective(400px) rotateX(-180deg);
+  }
+}
+
+@keyframes shadowFront {
+  0% {
+    opacity: 0;
+  }
+
+  45% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+
+  100% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes shadowBack {
+  0% {
+    opacity: 0.75;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+
+  55% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0.2;
+  }
+}
+
+@keyframes blinkDots {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}

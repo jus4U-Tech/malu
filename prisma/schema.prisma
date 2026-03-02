@@ -1,0 +1,72 @@
+// prisma/schema.prisma
+// Banco: PostgreSQL (dev: Docker | prod: Supabase)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Participante {
+  id          String       @id @default(cuid())
+  nome        String
+  palpite     String?      // MM/AA — imutável após definido
+  fotos       Foto[]
+  ilustracoes Ilustracao[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@map("participantes")
+}
+
+model Ilustracao {
+  id            String       @id @default(cuid())
+  autorId       String
+  autor         Participante @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  prompt        String
+  estilo        String?      @default("")
+  url           String       // imagem base64 ou URL
+  participantes String[]     // IDs dos participantes na composição
+  extras        String[]     // IDs dos extras na composição
+  createdAt     DateTime     @default(now())
+
+  @@map("ilustracoes")
+}
+
+model Foto {
+  id             String       @id @default(cuid())
+  participanteId String
+  participante   Participante @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+  url            String       // URL no Supabase Storage (prod) ou base64 (dev)
+  original       Boolean      @default(true) // true = original, false = tratada pela IA
+  ordem          Int          @default(0)
+  createdAt      DateTime     @default(now())
+
+  @@map("fotos")
+}
+
+model Config {
+  id              String   @id @default("singleton")
+  prdFotos        String?  @default("")
+  prdIlustracoes  String?  @default("")
+  appName         String?  @default("Big Brother Malú")
+  appUrl          String?  @default("")
+  updatedAt       DateTime @updatedAt
+
+  @@map("config")
+}
+
+model ElementoExtra {
+  id        String   @id @default(cuid())
+  nome      String
+  descricao String?  @default("")
+  foto      String?  // URL ou base64
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("elementos_extras")
+}
