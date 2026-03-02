@@ -47,7 +47,7 @@ export default function EmbeddedCountdown() {
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
             <span
                 style={{
-                    fontSize: 8,
+                    fontSize: 12,
                     fontWeight: 800,
                     color: "#F0A0BE",
                     letterSpacing: 1.2,
