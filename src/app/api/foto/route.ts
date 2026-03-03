@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 Aplique a instrução acima na imagem fornecida. Retorne APENAS a imagem resultante.`;
 
         // Nano Banana 2 — Gemini 3.1 Flash Image (fev/2026)
-        const model = "gemini-3.1-flash-image-preview";
+        const model = "gemini-3-pro-image-preview";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
         console.log(`[foto] Processando com modelo ${model}...`);

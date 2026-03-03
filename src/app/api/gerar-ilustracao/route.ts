@@ -125,11 +125,11 @@ export async function POST(req: NextRequest) {
             participantes: participantes.map((p: any) => ({ nome: p.nome, fotos: (p.fotos || []).length })),
             extras: extras.map((e: any) => ({ nome: e.nome, temFoto: !!e.foto })),
             totalParts: parts.length,
-            model: "gemini-3.1-flash-image-preview",
+            model: "gemini-3-pro-image-preview",
         };
 
         // Chamar Gemini
-        const model = "gemini-3.1-flash-image-preview";
+        const model = "gemini-3-pro-image-preview";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
 
         const res = await fetch(apiUrl, {
