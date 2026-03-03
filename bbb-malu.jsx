@@ -283,6 +283,7 @@ export default function App() {
     const [galeria, setGaleria] = useState([]);
     const [galeriaLoaded, setGaleriaLoaded] = useState(false);
     const [galeriaView, setGaleriaView] = useState(null); // ilustração selecionada para fullscreen
+    const [promptView, setPromptView] = useState(null); // prompt de ilustração para exibir
 
     const saveMeId = (id) => {
         document.cookie = `bbb_me=${id};path=/;max-age=${365 * 24 * 3600}`;
@@ -1000,7 +1001,7 @@ export default function App() {
                                                 </div>
                                             </div>
                                             {il.prompt && (
-                                                <button onClick={(e) => { e.stopPropagation(); alert(`💬 Prompt:\n\n"${il.prompt}"`); }}
+                                                <button onClick={(e) => { e.stopPropagation(); setPromptView({ prompt: il.prompt, autor: il.autor?.nome || "Anônimo", estilo: il.estilo }); }}
                                                     title="Ver prompt usado"
                                                     style={{
                                                         background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)",
@@ -2060,6 +2061,34 @@ export default function App() {
                             🗑️ Excluir Ilustração
                         </Btn>
                     )}
+                </Modal>
+            )}
+
+            {/* ══ MODAL: Ver prompt da ilustração ══ */}
+            {promptView && (
+                <Modal onClose={() => setPromptView(null)}>
+                    <div style={{ textAlign: "center", marginBottom: 16 }}>
+                        <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
+                        <h3 style={{ margin: 0, color: C.text, fontSize: 17 }}>Prompt da Ilustração</h3>
+                        <p style={{ color: C.textMut, fontSize: 12, margin: "6px 0 0" }}>
+                            por {promptView.autor}{promptView.estilo ? ` · ${promptView.estilo}` : ""}
+                        </p>
+                    </div>
+                    <div style={{
+                        background: C.surface, borderRadius: 12, padding: "16px 20px",
+                        border: `1px solid ${C.border}`, marginBottom: 16
+                    }}>
+                        <p style={{
+                            color: C.text, fontSize: 14, lineHeight: 1.6,
+                            fontStyle: "italic", margin: 0, whiteSpace: "pre-wrap"
+                        }}>
+                            &ldquo;{promptView.prompt}&rdquo;
+                        </p>
+                    </div>
+                    <Btn onClick={() => setPromptView(null)}
+                        style={{ width: "100%", background: C.card, border: `1px solid ${C.border}`, color: C.text }}>
+                        Fechar
+                    </Btn>
                 </Modal>
             )}
 
