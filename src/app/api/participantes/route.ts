@@ -1,14 +1,25 @@
 // src/app/api/participantes/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 
 // ── GET /api/participantes ─────────────────────────────────────────────────
 export async function GET() {
   try {
-    const participantes = await prisma.participante.findMany({
-      include: { fotos: { orderBy: { ordem: "asc" } } },
-      orderBy: { nome: "asc" },
-    });
+    const { data, error } = await supabase
+      .from("participantes")
+      .select("*, fotos(*)")
+      .order("nome");
+
+    if (error) throw error;
+
+    // Ordenar fotos por ordem
+    const participantes = (data || []).map((p) => ({
+      ...p,
+      fotos: (p.fotos || []).sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem),
+    }));
+
     return NextResponse.json(participantes);
   } catch (error) {
     console.error(error);
@@ -26,35 +37,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
     }
 
-    // Validar palpite — aceita DD/MM ou DD/MM/AAAA
     if (palpite && !/^\d{2}\/\d{2}(\/\d{4})?$/.test(palpite)) {
       return NextResponse.json({ error: "Palpite deve ser DD/MM ou DD/MM/AAAA" }, { status: 400 });
     }
 
-    // Verificar duplicata
-    const existing = await prisma.participante.findFirst({
-      where: { nome: { equals: nome.trim(), mode: "insensitive" } },
-    });
-    if (existing) {
+    // Verificar duplicata (case insensitive)
+    const { data: existing } = await supabase
+      .from("participantes")
+      .select("id")
+      .ilike("nome", nome.trim())
+      .limit(1);
+
+    if (existing && existing.length > 0) {
       return NextResponse.json({ error: `"${nome}" já está cadastrado` }, { status: 409 });
     }
 
-    const participante = await prisma.participante.create({
-      data: {
-        nome: nome.trim(),
-        palpite: palpite || null,
-        fotos: {
-          create: fotos.map((f: { url: string; original?: boolean }, i: number) => ({
-            url: f.url,
-            original: f.original ?? true,
-            ordem: i,
-          })),
-        },
-      },
-      include: { fotos: true },
-    });
+    // Criar participante
+    const { data: participante, error } = await supabase
+      .from("participantes")
+      .insert({ nome: nome.trim(), palpite: palpite || null })
+      .select()
+      .single();
 
-    return NextResponse.json(participante, { status: 201 });
+    if (error) throw error;
+
+    // Criar fotos
+    if (fotos.length > 0) {
+      const fotosData = fotos.map((f: { url: string; original?: boolean }, i: number) => ({
+        participanteId: participante.id,
+        url: f.url,
+        original: f.original ?? true,
+        ordem: i,
+      }));
+      await supabase.from("fotos").insert(fotosData);
+    }
+
+    // Retornar com fotos
+    const { data: result } = await supabase
+      .from("participantes")
+      .select("*, fotos(*)")
+      .eq("id", participante.id)
+      .single();
+
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erro ao criar participante" }, { status: 500 });

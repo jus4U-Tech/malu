@@ -1,14 +1,19 @@
 // src/app/api/extras/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 
 // ── GET /api/extras ─────────────────────────────────────────────────────────
 export async function GET() {
     try {
-        const extras = await prisma.elementoExtra.findMany({
-            orderBy: { createdAt: "asc" },
-        });
-        return NextResponse.json(extras);
+        const { data, error } = await supabase
+            .from("elementos_extras")
+            .select("*")
+            .order("createdAt");
+
+        if (error) throw error;
+        return NextResponse.json(data || []);
     } catch (error) {
         console.error(error);
         return NextResponse.json({ error: "Erro ao buscar extras" }, { status: 500 });
@@ -25,14 +30,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Nome é obrigatório" }, { status: 400 });
         }
 
-        const extra = await prisma.elementoExtra.create({
-            data: {
+        const { data: extra, error } = await supabase
+            .from("elementos_extras")
+            .insert({
                 nome: nome.trim(),
                 descricao: descricao || "",
                 foto: foto || null,
-            },
-        });
+            })
+            .select()
+            .single();
 
+        if (error) throw error;
         return NextResponse.json(extra, { status: 201 });
     } catch (error) {
         console.error(error);

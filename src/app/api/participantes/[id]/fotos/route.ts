@@ -1,9 +1,10 @@
 // src/app/api/participantes/[id]/fotos/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = "force-dynamic";
 
 // ── POST /api/participantes/:id/fotos ──────────────────────────────────────
-// Adiciona uma foto ao participante
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const { url, original = true } = await req.json();
@@ -13,23 +14,34 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         }
 
         // Verificar se participante existe
-        const part = await prisma.participante.findUnique({ where: { id: params.id } });
+        const { data: part } = await supabase
+            .from("participantes")
+            .select("id")
+            .eq("id", params.id)
+            .single();
+
         if (!part) {
             return NextResponse.json({ error: "Participante não encontrado" }, { status: 404 });
         }
 
         // Contar fotos para definir ordem
-        const count = await prisma.foto.count({ where: { participanteId: params.id } });
+        const { count } = await supabase
+            .from("fotos")
+            .select("id", { count: "exact", head: true })
+            .eq("participanteId", params.id);
 
-        const foto = await prisma.foto.create({
-            data: {
+        const { data: foto, error } = await supabase
+            .from("fotos")
+            .insert({
                 participanteId: params.id,
                 url,
                 original,
-                ordem: count,
-            },
-        });
+                ordem: count || 0,
+            })
+            .select()
+            .single();
 
+        if (error) throw error;
         return NextResponse.json(foto, { status: 201 });
     } catch (error) {
         console.error(error);
@@ -38,7 +50,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 }
 
 // ── DELETE /api/participantes/:id/fotos ─────────────────────────────────────
-// Remove uma foto por índice (ordem)
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
     try {
         const { searchParams } = new URL(req.url);
@@ -49,17 +60,22 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
         }
 
         // Buscar fotos ordenadas
-        const fotos = await prisma.foto.findMany({
-            where: { participanteId: params.id },
-            orderBy: { ordem: "asc" },
-        });
+        const { data: fotos } = await supabase
+            .from("fotos")
+            .select("id")
+            .eq("participanteId", params.id)
+            .order("ordem");
 
-        if (idx >= fotos.length) {
+        if (!fotos || idx >= fotos.length) {
             return NextResponse.json({ error: "Índice fora do range" }, { status: 404 });
         }
 
-        await prisma.foto.delete({ where: { id: fotos[idx].id } });
+        const { error } = await supabase
+            .from("fotos")
+            .delete()
+            .eq("id", fotos[idx].id);
 
+        if (error) throw error;
         return NextResponse.json({ ok: true });
     } catch (error) {
         console.error(error);
