@@ -1,15 +1,12 @@
 // src/app/api/foto-extra/[id]/route.ts
 // Serve a foto de um elemento extra pelo ID
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
     try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-        const supabase = createClient(url, key);
 
         const { data, error } = await supabase
             .from("elementos_extras")

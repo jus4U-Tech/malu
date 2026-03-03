@@ -42,6 +42,7 @@ model Foto {
   participanteId String
   participante   Participante @relation(fields: [participanteId], references: [id], onDelete: Cascade)
   url            String       // URL no Supabase Storage (prod) ou base64 (dev)
+  thumbnail      String?      // thumbnail base64 (WebP ~200px)
   original       Boolean      @default(true) // true = original, false = tratada pela IA
   ordem          Int          @default(0)
   createdAt      DateTime     @default(now())

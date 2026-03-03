@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 function getSupabase() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.PROD_SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
     return createClient(url, key);
 }
 

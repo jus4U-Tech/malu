@@ -1,6 +1,7 @@
 // src/app/api/participantes/[id]/fotos/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import sharp from "sharp";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,39 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
             .single();
 
         if (error) throw error;
+
+        // ── Auto-gerar thumbnail ────────────────────────────────────────
+        try {
+            let imageBuffer: Buffer;
+            if (url.startsWith("data:")) {
+                const match = url.match(/^data:([^;]+);base64,(.+)$/);
+                if (match) {
+                    imageBuffer = Buffer.from(match[2], "base64");
+                }
+            } else {
+                const imgRes = await fetch(url);
+                imageBuffer = Buffer.from(await imgRes.arrayBuffer());
+            }
+
+            if (imageBuffer!) {
+                const thumbBuffer = await sharp(imageBuffer)
+                    .resize(200, null, { withoutEnlargement: true })
+                    .webp({ quality: 70 })
+                    .toBuffer();
+                const thumbBase64 = `data:image/webp;base64,${thumbBuffer.toString("base64")}`;
+
+                await supabase
+                    .from("fotos")
+                    .update({ thumbnail: thumbBase64 })
+                    .eq("id", foto.id);
+
+                console.log(`[fotos] Thumbnail gerado para foto ${foto.id}`);
+            }
+        } catch (thumbErr) {
+            console.error("[fotos] Erro ao gerar thumbnail:", thumbErr);
+            // Não falhar a request por causa do thumbnail
+        }
+
         return NextResponse.json(foto, { status: 201 });
     } catch (error) {
         console.error(error);

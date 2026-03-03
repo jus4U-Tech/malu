@@ -1,5 +1,5 @@
-// src/app/api/foto/[id]/route.ts
-// Serve uma foto individual pelo ID
+// src/app/api/foto/[id]/thumb/route.ts
+// Serve o thumbnail de uma foto pelo ID
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -7,10 +7,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
     try {
-
         const { data: foto, error } = await supabase
             .from("fotos")
-            .select("url")
+            .select("thumbnail, url")
             .eq("id", params.id)
             .single();
 
@@ -18,10 +17,11 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
             return NextResponse.json({ error: "Foto não encontrada" }, { status: 404 });
         }
 
-        const fotoUrl = foto.url;
+        // Se tem thumbnail, usar. Senão, fallback para a foto full.
+        const source = foto.thumbnail || foto.url;
 
-        if (fotoUrl.startsWith("data:")) {
-            const match = fotoUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (source.startsWith("data:")) {
+            const match = source.match(/^data:([^;]+);base64,(.+)$/);
             if (match) {
                 const buffer = Buffer.from(match[2], "base64");
                 return new NextResponse(buffer, {
@@ -33,9 +33,9 @@ export async function GET(_: NextRequest, { params }: { params: { id: string } }
             }
         }
 
-        return NextResponse.redirect(fotoUrl);
+        return NextResponse.redirect(source);
     } catch (error) {
         console.error(error);
-        return NextResponse.json({ error: "Erro ao buscar foto" }, { status: 500 });
+        return NextResponse.json({ error: "Erro ao buscar thumbnail" }, { status: 500 });
     }
 }

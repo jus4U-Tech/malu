@@ -1666,7 +1666,7 @@ export default function App() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10, maxHeight: "60vh", overflowY: "auto", padding: "4px" }}>
                         {parts.map(p => {
                             const isElim = calcStatus(p.palpite) === "Eliminado";
-                            const fotoUrl = p.fotos?.[0] || null;
+                            const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
                             return (
                                 <button key={p.id} onClick={() => setIdentityConfirm(p)}
                                     style={{
@@ -1674,8 +1674,8 @@ export default function App() {
                                         padding: 6, cursor: "pointer", textAlign: "center", transition: "all .15s",
                                     }}>
                                     <div style={{ position: "relative", width: 72, height: 72, margin: "0 auto 4px", borderRadius: 10, overflow: "hidden" }}>
-                                        {fotoUrl ? (
-                                            <img src={fotoUrl} alt={p.nome}
+                                        {thumbUrl ? (
+                                            <img src={thumbUrl} alt={p.nome}
                                                 style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
                                         ) : (
                                             <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>
@@ -1811,7 +1811,7 @@ export default function App() {
                         {parts.map(p => {
                             const sel = iaSelParts.includes(p.id);
                             const isElim = calcStatus(p.palpite) === "Eliminado";
-                            const fotoUrl = p.fotos?.[0] || null;
+                            const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
                             return (
                                 <button key={p.id} onClick={() => toggleIaPart(p.id)}
                                     style={{
@@ -1822,8 +1822,8 @@ export default function App() {
                                         transition: "all .15s",
                                     }}>
                                     <div style={{ position: "relative", width: 44, height: 44, borderRadius: 8, overflow: "hidden" }}>
-                                        {fotoUrl ? (
-                                            <img src={fotoUrl} alt={p.nome}
+                                        {thumbUrl ? (
+                                            <img src={thumbUrl} alt={p.nome}
                                                 style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
                                         ) : (
                                             <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>

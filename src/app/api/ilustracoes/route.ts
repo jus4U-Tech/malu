@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 function getSupabase() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.PROD_SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
     return createClient(url, key);
 }
 
@@ -58,9 +58,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "autorId, prompt e url são obrigatórios" }, { status: 400 });
         }
 
+        const id = `c${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
         const { data, error } = await supabase
             .from("ilustracoes")
             .insert({
+                id,
                 autorId,
                 prompt,
                 estilo: estilo || "",
@@ -82,7 +84,8 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ ...data, autor: { nome: autor?.nome || "?" } });
     } catch (e: unknown) {
-        const msg = e instanceof Error ? e.message : "Erro";
+        const msg = e instanceof Error ? e.message : JSON.stringify(e);
+        console.error("[ilustracoes] POST error:", msg);
         return NextResponse.json({ error: msg }, { status: 500 });
     }
 }

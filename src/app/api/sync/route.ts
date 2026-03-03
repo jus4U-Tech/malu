@@ -6,8 +6,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+        const url = process.env.PROD_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+        const key = process.env.PROD_SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
         const supabase = createClient(url, key);
 
         // Queries separadas — evita join PostgREST que carrega colunas base64
@@ -22,11 +22,14 @@ export async function GET() {
         if (fotosRes.error) throw fotosRes.error;
         if (extrasRes.error) throw extrasRes.error;
 
-        // Agrupar fotos por participante
-        const fotosByPart = new Map<string, string[]>();
+        // Agrupar fotos por participante (com thumb)
+        const fotosByPart = new Map<string, { foto: string; thumb: string }[]>();
         for (const f of fotosRes.data || []) {
             const arr = fotosByPart.get(f.participanteId) || [];
-            arr.push(`/api/foto/${f.id}`);
+            arr.push({
+                foto: `/api/foto/${f.id}`,
+                thumb: `/api/foto/${f.id}/thumb`,
+            });
             fotosByPart.set(f.participanteId, arr);
         }
 
@@ -34,7 +37,8 @@ export async function GET() {
             id: p.id,
             nome: p.nome,
             palpite: p.palpite || "",
-            fotos: fotosByPart.get(p.id) || [],
+            fotos: (fotosByPart.get(p.id) || []).map(f => f.foto),
+            thumbs: (fotosByPart.get(p.id) || []).map(f => f.thumb),
         }));
 
         const cfg = configRes.data || {
@@ -67,9 +71,10 @@ export async function GET() {
             }
         );
     } catch (error) {
-        console.error("SYNC ERROR:", error);
+        console.error("SYNC ERROR:", JSON.stringify(error, null, 2));
+        const detail = error instanceof Error ? error.message : JSON.stringify(error);
         return NextResponse.json(
-            { error: "Erro ao sincronizar", detail: error instanceof Error ? error.message : String(error) },
+            { error: "Erro ao sincronizar", detail },
             { status: 500 }
         );
     }

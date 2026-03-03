@@ -1,6 +1,7 @@
 // src/app/api/participantes/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import sharp from "sharp";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +70,33 @@ export async function POST(req: NextRequest) {
         original: f.original ?? true,
         ordem: i,
       }));
-      await supabase.from("fotos").insert(fotosData);
+      const { data: insertedFotos } = await supabase.from("fotos").insert(fotosData).select();
+
+      // Auto-gerar thumbnails para cada foto inserida
+      if (insertedFotos) {
+        for (const foto of insertedFotos) {
+          try {
+            let imageBuffer: Buffer | undefined;
+            if (foto.url.startsWith("data:")) {
+              const match = foto.url.match(/^data:([^;]+);base64,(.+)$/);
+              if (match) imageBuffer = Buffer.from(match[2], "base64");
+            } else {
+              const imgRes = await fetch(foto.url);
+              imageBuffer = Buffer.from(await imgRes.arrayBuffer());
+            }
+            if (imageBuffer) {
+              const thumbBuffer = await sharp(imageBuffer)
+                .resize(200, null, { withoutEnlargement: true })
+                .webp({ quality: 70 })
+                .toBuffer();
+              const thumbBase64 = `data:image/webp;base64,${thumbBuffer.toString("base64")}`;
+              await supabase.from("fotos").update({ thumbnail: thumbBase64 }).eq("id", foto.id);
+            }
+          } catch (thumbErr) {
+            console.error(`[participantes] Erro thumb foto ${foto.id}:`, thumbErr);
+          }
+        }
+      }
     }
 
     // Retornar com fotos
