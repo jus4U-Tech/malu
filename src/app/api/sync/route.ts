@@ -1,32 +1,50 @@
 // src/app/api/sync/route.ts
 // Rota que retorna todos os dados de uma vez para carregar o app
+// Usa Supabase REST API (funciona no Vercel) com fallback para Prisma (dev local)
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
     try {
-        const [participantes, extras, config] = await Promise.all([
-            prisma.participante.findMany({
-                include: { fotos: { orderBy: { ordem: "asc" } } },
-                orderBy: { nome: "asc" },
-            }),
-            prisma.elementoExtra.findMany({ orderBy: { createdAt: "asc" } }),
-            prisma.config.findUnique({ where: { id: "singleton" } }),
+        const [partsRes, extrasRes, configRes] = await Promise.all([
+            supabase
+                .from("participantes")
+                .select("id, nome, palpite, created_at, fotos(id, url, ordem)")
+                .order("nome"),
+            supabase
+                .from("elementos_extras")
+                .select("id, nome, descricao, foto, created_at")
+                .order("created_at"),
+            supabase
+                .from("config")
+                .select("*")
+                .eq("id", "singleton")
+                .single(),
         ]);
 
+        if (partsRes.error) throw partsRes.error;
+        if (extrasRes.error) throw extrasRes.error;
+
         // Normalizar participantes para o formato que o front-end espera
-        const parts = participantes.map((p) => ({
+        const parts = (partsRes.data || []).map((p) => ({
             id: p.id,
             nome: p.nome,
             palpite: p.palpite || "",
-            fotos: p.fotos.map((f) => f.url),
+            fotos: (p.fotos || [])
+                .sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem)
+                .map((f: { url: string }) => f.url),
         }));
 
-        const cfg = config || { prdFotos: "", prdIlustracoes: "", appName: "Big Brother Malú", appUrl: "" };
+        const cfg = configRes.data || {
+            prdFotos: "",
+            prdIlustracoes: "",
+            appName: "Big Brother Malú",
+            appUrl: "",
+        };
 
         return NextResponse.json({
             parts,
-            extras: extras.map((e) => ({
+            extras: (extrasRes.data || []).map((e) => ({
                 id: e.id,
                 nome: e.nome,
                 descricao: e.descricao || "",
@@ -42,6 +60,9 @@ export async function GET() {
     } catch (error) {
         console.error(error);
         const msg = error instanceof Error ? error.message : String(error);
-        return NextResponse.json({ error: "Erro ao sincronizar", detail: msg }, { status: 500 });
+        return NextResponse.json(
+            { error: "Erro ao sincronizar", detail: msg },
+            { status: 500 }
+        );
     }
 }
