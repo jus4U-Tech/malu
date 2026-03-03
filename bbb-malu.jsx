@@ -386,6 +386,23 @@ export default function App() {
         setGaleriaLoaded(true);
     };
 
+    const deleteIlustracao = async (id) => {
+        if (!confirm("Tem certeza que deseja excluir esta ilustração?")) return;
+        try {
+            const res = await fetch(`/api/ilustracoes?id=${id}`, { method: "DELETE" });
+            if (res.ok) {
+                showToast("Ilustração excluída", true);
+                setGaleria(prev => prev.filter(il => il.id !== id));
+                setGaleriaView(null);
+            } else {
+                const d = await res.json();
+                showToast(d.error || "Erro ao excluir", false);
+            }
+        } catch {
+            showToast("Erro de conexão", false);
+        }
+    };
+
     // Carrega galeria na inicialização (para mostrar contador correto)
     useEffect(() => {
         if (!galeriaLoaded) {
@@ -2021,6 +2038,13 @@ export default function App() {
                             Fechar
                         </Btn>
                     </div>
+                    {isAdmin && (
+                        <Btn onClick={() => deleteIlustracao(galeriaView.id)}
+                            color="transparent" textColor="#E74C3C"
+                            style={{ width: "100%", marginTop: 10, border: "1px solid #E74C3C", fontSize: 13 }}>
+                            🗑️ Excluir Ilustração
+                        </Btn>
+                    )}
                 </Modal>
             )}
 

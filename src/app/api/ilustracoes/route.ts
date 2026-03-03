@@ -89,3 +89,28 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: msg }, { status: 500 });
     }
 }
+
+// DELETE — Exclui uma ilustração (admin)
+export async function DELETE(req: NextRequest) {
+    try {
+        const supabase = getSupabase();
+        const id = req.nextUrl.searchParams.get("id");
+
+        if (!id) {
+            return NextResponse.json({ error: "id é obrigatório" }, { status: 400 });
+        }
+
+        const { error } = await supabase
+            .from("ilustracoes")
+            .delete()
+            .eq("id", id);
+
+        if (error) throw error;
+
+        return NextResponse.json({ ok: true });
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Erro";
+        console.error("[ilustracoes] DELETE error:", msg);
+        return NextResponse.json({ error: msg }, { status: 500 });
+    }
+}
