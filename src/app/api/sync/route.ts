@@ -10,11 +10,11 @@ export async function GET() {
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
         const supabase = createClient(url, key);
 
-        // Queries separadas (o join fotos(id,ordem) causa timeout/empty no Supabase free)
+        // Queries separadas — evita join PostgREST que carrega colunas base64
         const [partsRes, fotosRes, extrasRes, configRes] = await Promise.all([
             supabase.from("participantes").select("id, nome, palpite").order("nome"),
             supabase.from("fotos").select("id, participanteId, ordem").order("ordem"),
-            supabase.from("elementos_extras").select("id, nome, descricao, foto").order("createdAt"),
+            supabase.from("elementos_extras").select("id, nome, descricao").order("createdAt"),
             supabase.from("config").select("*").eq("id", "singleton").single(),
         ]);
 
@@ -51,7 +51,7 @@ export async function GET() {
                     id: e.id,
                     nome: e.nome,
                     descricao: e.descricao || "",
-                    foto: e.foto || "",
+                    foto: `/api/foto-extra/${e.id}`,
                 })),
                 cfg: {
                     prdFotos: cfg.prdFotos || "",

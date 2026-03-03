@@ -1,39 +1,58 @@
+// src/app/api/batch-fotos/route.ts
+// Processa todas as fotos existentes com o PRD via Gemini 2.5 Flash Image
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new PrismaClient();
+export const dynamic = "force-dynamic";
+export const maxDuration = 300; // 5 min (Vercel Pro) ou 10s (Hobby)
 
-// ONE-TIME: Processa todas as fotos existentes com o PRD via Gemini 2.5 Flash Image
 export async function POST() {
     try {
-        const config = await prisma.config.findFirst();
-        const prdPrompt = config?.prdFotos?.trim();
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+        const supabase = createClient(url, key);
 
+        // Buscar config com PRD
+        const { data: config } = await supabase
+            .from("config")
+            .select("prdFotos")
+            .eq("id", "singleton")
+            .single();
+
+        const prdPrompt = config?.prdFotos?.trim();
         if (!prdPrompt) {
             return NextResponse.json({ error: "PRD de fotos não configurado" }, { status: 400 });
         }
 
-        const key = process.env.GEMINI_API_KEY;
-        if (!key) {
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (!geminiKey) {
             return NextResponse.json({ error: "GEMINI_API_KEY não configurada" }, { status: 400 });
         }
 
-        const fotos = await prisma.foto.findMany({
-            include: { participante: { select: { nome: true } } },
-        });
+        // Buscar apenas fotos originais (não re-processar as já tratadas)
+        const { data: fotos, error: fotosErr } = await supabase
+            .from("fotos")
+            .select("id, participanteId, url, original")
+            .eq("original", true);
 
-        console.log(`[batch] Processando ${fotos.length} fotos com PRD: "${prdPrompt.slice(0, 80)}"`);
+        if (fotosErr) throw fotosErr;
+
+        // Buscar nomes dos participantes
+        const { data: parts } = await supabase
+            .from("participantes")
+            .select("id, nome");
+        const nameMap = new Map((parts || []).map((p: any) => [p.id, p.nome]));
+
+        console.log(`[batch] Processando ${fotos?.length || 0} fotos originais com PRD`);
 
         const results: { id: string; nome: string; status: string }[] = [];
         let processed = 0;
         let failed = 0;
-
-        // gemini-2.5-flash-image — comprovadamente retorna imagens via API
         const model = "gemini-2.5-flash-image";
 
-        for (const foto of fotos) {
-            const nome = foto.participante?.nome || "?";
-            console.log(`[batch] ${processed + failed + 1}/${fotos.length} - ${nome}...`);
+        for (const foto of fotos || []) {
+            const nome = nameMap.get(foto.participanteId) || "?";
+            console.log(`[batch] ${processed + failed + 1}/${fotos!.length} - ${nome}...`);
 
             try {
                 let imageBase64: string;
@@ -58,7 +77,7 @@ export async function POST() {
                 const prompt = `${prdPrompt}\n\nAplique a instrução acima na imagem fornecida. Retorne APENAS a imagem resultante.`;
 
                 const res = await fetch(
-                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+                    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
@@ -69,9 +88,7 @@ export async function POST() {
                                     { inline_data: { mime_type: mimeType, data: imageBase64 } }
                                 ]
                             }],
-                            generationConfig: {
-                                responseModalities: ["IMAGE", "TEXT"],
-                            },
+                            generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
                         }),
                     }
                 );
@@ -85,27 +102,25 @@ export async function POST() {
                     continue;
                 }
 
-                // Procurar imagem (suporte camelCase e snake_case)
-                const parts = data.candidates?.[0]?.content?.parts || [];
+                const apiParts = data.candidates?.[0]?.content?.parts || [];
                 let newUrl: string | null = null;
-                for (const part of parts) {
+                for (const part of apiParts) {
                     if (part.inlineData?.data) {
-                        const m = part.inlineData.mimeType || "image/png";
-                        newUrl = `data:${m};base64,${part.inlineData.data}`;
+                        newUrl = `data:${part.inlineData.mimeType || "image/png"};base64,${part.inlineData.data}`;
                         break;
                     }
                     if (part.inline_data?.data) {
-                        const m = part.inline_data.mime_type || "image/png";
-                        newUrl = `data:${m};base64,${part.inline_data.data}`;
+                        newUrl = `data:${part.inline_data.mime_type || "image/png"};base64,${part.inline_data.data}`;
                         break;
                     }
                 }
 
                 if (newUrl) {
-                    await prisma.foto.update({
-                        where: { id: foto.id },
-                        data: { url: newUrl, original: false },
-                    });
+                    const { error: updateErr } = await supabase
+                        .from("fotos")
+                        .update({ url: newUrl, original: false })
+                        .eq("id", foto.id);
+                    if (updateErr) throw updateErr;
                     processed++;
                     results.push({ id: foto.id, nome, status: "OK ✓" });
                     console.log(`[batch] ✓ ${nome}`);
@@ -114,9 +129,7 @@ export async function POST() {
                     failed++;
                 }
 
-                // Delay entre chamadas
                 await new Promise(r => setTimeout(r, 2000));
-
             } catch (err) {
                 const msg = err instanceof Error ? err.message : "erro";
                 results.push({ id: foto.id, nome, status: `FAIL - ${msg}` });
@@ -124,9 +137,8 @@ export async function POST() {
             }
         }
 
-        console.log(`[batch] Concluído! ${processed}/${fotos.length} processadas, ${failed} falhas`);
-
-        return NextResponse.json({ total: fotos.length, processed, failed, results });
+        console.log(`[batch] Concluído! ${processed}/${fotos!.length} processadas, ${failed} falhas`);
+        return NextResponse.json({ total: fotos!.length, processed, failed, results });
     } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Erro desconhecido";
         console.error("[batch] Fatal:", msg);
