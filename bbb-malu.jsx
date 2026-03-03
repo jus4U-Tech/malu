@@ -999,900 +999,868 @@ export default function App() {
                                                     {new Date(il.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}{" "}
                                                     {new Date(il.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                                                 </div>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                                                    {il.prompt && (
+                                                        <button onClick={(e) => { e.stopPropagation(); setPromptView({ prompt: il.prompt, autor: il.autor?.nome || "Anônimo", estilo: il.estilo }); }}
+                                                            title="Ver prompt usado"
+                                                            style={{
+                                                                background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)",
+                                                                border: "none", borderRadius: 8, padding: "4px 8px",
+                                                                fontSize: 14, cursor: "pointer",
+                                                            }}>
+                                                            ✨
+                                                        </button>
+                                                    )}
+                                                    {isAdmin && (
+                                                        <button onClick={(e) => { e.stopPropagation(); deleteIlustracao(il.id); }}
+                                                            title="Excluir ilustração"
+                                                            style={{
+                                                                background: "transparent", border: `1px solid #E74C3C`,
+                                                                borderRadius: 8, padding: "3px 8px",
+                                                                fontSize: 12, cursor: "pointer", color: "#E74C3C",
+                                                            }}>
+                                                            🗑️
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                            {il.prompt && (
-                                                <button onClick={(e) => { e.stopPropagation(); setPromptView({ prompt: il.prompt, autor: il.autor?.nome || "Anônimo", estilo: il.estilo }); }}
-                                                    title="Ver prompt usado"
-                                                    style={{
-                                                        background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)",
-                                                        border: "none", borderRadius: 8, padding: "4px 8px",
-                                                        fontSize: 14, cursor: "pointer", flexShrink: 0, marginLeft: 8,
-                                                    }}>
-                                                    ✨
-                                                </button>
+                                            <button onClick={async (e) => {
+                                                e.stopPropagation();
+                                                await copyImageToClipboard(il.url, showToast);
+                                            }} style={{
+                                                width: "100%", padding: "8px 0", border: `1px solid ${C.borderHi}`,
+                                                borderRadius: 8, background: C.surface, color: C.pinkLt,
+                                                fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                                transition: "all .15s",
+                                            }}>
+                                                📋 Copiar
+                                            </button>
+                                        </div>
+                                    </div>
+                            ))}
+                                </div>
+                            )
+                            ) : filter === "Extras" ? (
+                            /* ══ EXTRAS GRID ══ */
+                            extras.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "80px 20px", color: C.textDim }}>
+                                <div style={{ fontSize: 52, marginBottom: 16 }}>🎭</div>
+                                <p style={{ fontSize: 16, margin: 0 }}>
+                                    {isAdmin ? "Cadastre elementos extras nas configurações" : "Nenhum elemento extra ainda"}
+                                </p>
+                            </div>
+                            ) : (
+                            <div className="card-grid">
+                                {extras.map(el => (
+                                    <div key={el.id} style={{
+                                        background: C.card, borderRadius: 16, overflow: "hidden",
+                                        border: `1px solid ${C.border}`,
+                                        transition: "transform .2s, box-shadow .2s"
+                                    }}>
+                                        <div style={{ aspectRatio: "3/4", background: C.surface, position: "relative", overflow: "hidden" }}>
+                                            {el.foto ? (
+                                                <img src={el.foto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                            ) : (
+                                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60, color: C.textDim }}>🎭</div>
                                             )}
                                         </div>
-                                        <button onClick={async (e) => {
-                                            e.stopPropagation();
-                                            await copyImageToClipboard(il.url, showToast);
-                                        }} style={{
-                                            width: "100%", padding: "8px 0", border: `1px solid ${C.borderHi}`,
-                                            borderRadius: 8, background: C.surface, color: C.pinkLt,
-                                            fontSize: 12, fontWeight: 600, cursor: "pointer",
-                                            transition: "all .15s",
-                                        }}>
-                                            📋 Copiar
-                                        </button>
+                                        <div style={{ padding: "12px 14px" }}>
+                                            <div style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 4 }}>{el.nome}</div>
+                                            {el.descricao && (
+                                                <p style={{ fontSize: 13, color: C.textMut, margin: 0, lineHeight: 1.4 }}>{el.descricao}</p>
+                                            )}
+                                            {isAdmin && (
+                                                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                                                    <button onClick={() => openEditExtra(el)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", color: C.pinkLt, cursor: "pointer", fontSize: 12 }}>✏️ Editar</button>
+                                                    <button onClick={() => removeExtra(el.id)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", color: "#9A4258", cursor: "pointer", fontSize: 12 }}>🗑️ Remover</button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
-                    )
-                ) : filter === "Extras" ? (
-                    /* ══ EXTRAS GRID ══ */
-                    extras.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "80px 20px", color: C.textDim }}>
-                            <div style={{ fontSize: 52, marginBottom: 16 }}>🎭</div>
-                            <p style={{ fontSize: 16, margin: 0 }}>
-                                {isAdmin ? "Cadastre elementos extras nas configurações" : "Nenhum elemento extra ainda"}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="card-grid">
-                            {extras.map(el => (
-                                <div key={el.id} style={{
-                                    background: C.card, borderRadius: 16, overflow: "hidden",
-                                    border: `1px solid ${C.border}`,
-                                    transition: "transform .2s, box-shadow .2s"
-                                }}>
-                                    <div style={{ aspectRatio: "3/4", background: C.surface, position: "relative", overflow: "hidden" }}>
-                                        {el.foto ? (
-                                            <img src={el.foto} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                                        ) : (
-                                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 60, color: C.textDim }}>🎭</div>
-                                        )}
-                                    </div>
-                                    <div style={{ padding: "12px 14px" }}>
-                                        <div style={{ fontWeight: 700, fontSize: 16, color: C.text, marginBottom: 4 }}>{el.nome}</div>
-                                        {el.descricao && (
-                                            <p style={{ fontSize: 13, color: C.textMut, margin: 0, lineHeight: 1.4 }}>{el.descricao}</p>
-                                        )}
-                                        {isAdmin && (
-                                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                                                <button onClick={() => openEditExtra(el)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", color: C.pinkLt, cursor: "pointer", fontSize: 12 }}>✏️ Editar</button>
-                                                <button onClick={() => removeExtra(el.id)} style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, padding: "6px 12px", color: "#9A4258", cursor: "pointer", fontSize: 12 }}>🗑️ Remover</button>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )
-                ) : (
-                    /* ══ PARTICIPANTS GRID ══ */
-                    lista.length === 0 ? (
-                        <div style={{ textAlign: "center", padding: "80px 20px", color: C.textDim }}>
-                            <div style={{ fontSize: 52, marginBottom: 16 }}>🎂</div>
-                            <p style={{ fontSize: 16, margin: 0 }}>
-                                {parts.length === 0
-                                    ? (isAdmin ? "Cadastre ou importe participantes" : "Nenhum participante ainda")
-                                    : "Nenhum neste filtro"}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="card-grid">
-                            {lista.map(p => (
-                                <ParticipantCard key={p.id} p={p} isAdmin={isAdmin}
-                                    onEdit={() => openEdit(p)} onDelete={() => setDelId(p.id)}
-                                    onAddFoto={url => addFoto(p.id, url)} onRmFoto={idx => rmFoto(p.id, idx)}
-                                />
-                            ))}
-                        </div>
-                    )
+                                ))}
+                            </div>
+                            )
+                            ) : (
+                            /* ══ PARTICIPANTS GRID ══ */
+                            lista.length === 0 ? (
+                            <div style={{ textAlign: "center", padding: "80px 20px", color: C.textDim }}>
+                                <div style={{ fontSize: 52, marginBottom: 16 }}>🎂</div>
+                                <p style={{ fontSize: 16, margin: 0 }}>
+                                    {parts.length === 0
+                                        ? (isAdmin ? "Cadastre ou importe participantes" : "Nenhum participante ainda")
+                                        : "Nenhum neste filtro"}
+                                </p>
+                            </div>
+                            ) : (
+                            <div className="card-grid">
+                                {lista.map(p => (
+                                    <ParticipantCard key={p.id} p={p} isAdmin={isAdmin}
+                                        onEdit={() => openEdit(p)} onDelete={() => setDelId(p.id)}
+                                        onAddFoto={url => addFoto(p.id, url)} onRmFoto={idx => rmFoto(p.id, idx)}
+                                    />
+                                ))}
+                            </div>
+                            )
                 )}
-            </main>
+                        </main>
 
             {/* ══ MODAL: Senha ══ */}
-            {showPwd && (
-                <Modal onClose={() => setShowPwd(false)}>
-                    <div style={{ textAlign: "center", paddingBottom: 8 }}>
-                        <div style={{ fontSize: 44, marginBottom: 8 }}>🔐</div>
-                        <h2 style={{ margin: "0 0 4px", color: C.pinkLt, fontSize: 20 }}>Acesso Admin</h2>
-                        <p style={{ margin: "0 0 24px", color: C.textMut, fontSize: 14 }}>Digite a senha para continuar</p>
-                        <input type="password" value={pwdIn} autoFocus
-                            onChange={e => { setPwdIn(e.target.value); setPwdErr(false); }}
-                            onKeyDown={e => e.key === "Enter" && checkPwd()}
-                            placeholder="Senha"
-                            style={{ ...inputSt, textAlign: "center", fontSize: 20, letterSpacing: 5, marginBottom: pwdErr ? 8 : 16 }}
-                        />
-                        {pwdErr && <p style={{ margin: "0 0 14px", color: C.red, fontSize: 13, fontWeight: 600 }}>Senha incorreta</p>}
+                {showPwd && (
+                    <Modal onClose={() => setShowPwd(false)}>
+                        <div style={{ textAlign: "center", paddingBottom: 8 }}>
+                            <div style={{ fontSize: 44, marginBottom: 8 }}>🔐</div>
+                            <h2 style={{ margin: "0 0 4px", color: C.pinkLt, fontSize: 20 }}>Acesso Admin</h2>
+                            <p style={{ margin: "0 0 24px", color: C.textMut, fontSize: 14 }}>Digite a senha para continuar</p>
+                            <input type="password" value={pwdIn} autoFocus
+                                onChange={e => { setPwdIn(e.target.value); setPwdErr(false); }}
+                                onKeyDown={e => e.key === "Enter" && checkPwd()}
+                                placeholder="Senha"
+                                style={{ ...inputSt, textAlign: "center", fontSize: 20, letterSpacing: 5, marginBottom: pwdErr ? 8 : 16 }}
+                            />
+                            {pwdErr && <p style={{ margin: "0 0 14px", color: C.red, fontSize: 13, fontWeight: 600 }}>Senha incorreta</p>}
+                            <div style={{ display: "flex", gap: 10 }}>
+                                <Btn onClick={checkPwd} style={{ flex: 1 }}>Entrar</Btn>
+                                <Btn onClick={() => setShowPwd(false)} color={C.surface} textColor={C.textMut}
+                                    style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
+                            </div>
+                        </div>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Painel Config ══ */}
+                {showPanel && (
+                    <Modal onClose={() => setShowPanel(false)}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+                            <div>
+                                <h2 style={{ margin: 0, color: C.pinkLt, fontSize: 18, fontWeight: 700 }}>⚙️ Configurações</h2>
+                                <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textMut }}>{panelPage + 1} / {pages.length}</p>
+                            </div>
+                            <button onClick={() => setShowPanel(false)} style={{ background: "none", border: "none", color: C.textMut, fontSize: 24, cursor: "pointer", padding: 4 }}>✕</button>
+                        </div>
+
+                        {/* Segmented control */}
+                        <div className="config-tabs" style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 16 }}>
+                            {pages.map((pg, i) => (
+                                <button key={pg.key} onClick={() => setPanelPage(i)}
+                                    style={{
+                                        flex: 1, padding: "8px 2px", border: "none", borderRadius: 11, cursor: "pointer",
+                                        fontSize: 11, fontWeight: 700, transition: "all .2s", lineHeight: 1.3,
+                                        background: panelPage === i ? C.pink : "transparent",
+                                        color: panelPage === i ? "#fff" : C.textMut,
+                                        WebkitTapHighlightColor: "transparent"
+                                    }}>
+                                    <div style={{ fontSize: 17, marginBottom: 2 }}>{pg.icon}</div>
+                                    <div>{pg.label}</div>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Dots */}
+                        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 18 }}>
+                            {pages.map((_, i) => (
+                                <button key={i} onClick={() => setPanelPage(i)}
+                                    style={{
+                                        width: panelPage === i ? 20 : 6, height: 6, borderRadius: 3, border: "none",
+                                        cursor: "pointer", transition: "all .25s", padding: 0,
+                                        background: panelPage === i ? C.pink : C.border
+                                    }} />
+                            ))}
+                        </div>
+
+                        {/* Conteúdo da página */}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+
+                            {/* Participantes */}
+                            {panelPage === 0 && (
+                                <div>
+                                    <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                                        <Btn onClick={() => { setShowPanel(false); openNew(); }} style={{ flex: 1, fontSize: 14 }}>➕ Novo</Btn>
+                                        <Btn onClick={() => { setShowPanel(false); setShowImport(true); setImportRes(null); setImportTxt(""); }}
+                                            color={C.surface} textColor={C.pinkLt}
+                                            style={{ flex: 1, border: `1px solid ${C.borderHi}`, fontSize: 14 }}>🤖 Importar</Btn>
+                                    </div>
+                                    <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                                        {Object.entries(STATUS_CFG).map(([s, sc]) => (
+                                            <div key={s} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
+                                                <span style={{ fontSize: 16 }}>{sc.icon}</span>
+                                                <span style={{ fontSize: 14, color: sc.color, fontWeight: 600 }}>{s}</span>
+                                                <span style={{ fontSize: 13, color: C.textMut, marginLeft: "auto", fontWeight: 700 }}>{counts[s]}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Extras */}
+                            {panelPage === 1 && (
+                                <div>
+                                    <Btn onClick={() => { setShowPanel(false); openNewExtra(); }} style={{ fontSize: 14, marginBottom: 14 }} full>🎭 Novo Elemento</Btn>
+                                    {extras.length === 0 ? (
+                                        <p style={{ textAlign: "center", fontSize: 14, color: C.textDim, padding: "30px 0" }}>Nenhum elemento extra cadastrado</p>
+                                    ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                            {extras.map(el => (
+                                                <div key={el.id} style={{
+                                                    display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
+                                                    background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`,
+                                                }}>
+                                                    {el.foto ? (
+                                                        <img src={el.foto} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
+                                                    ) : (
+                                                        <div style={{ width: 44, height: 44, borderRadius: 8, background: C.border, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎭</div>
+                                                    )}
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{el.nome}</div>
+                                                        {el.descricao && <div style={{ fontSize: 12, color: C.textMut, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{el.descricao}</div>}
+                                                    </div>
+                                                    <button onClick={() => { setShowPanel(false); openEditExtra(el); }}
+                                                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.textMut, padding: 4, WebkitTapHighlightColor: "transparent" }}>✏️</button>
+                                                    <button onClick={() => removeExtra(el.id)}
+                                                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.red, padding: 4, WebkitTapHighlightColor: "transparent" }}>🗑️</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Fotos IA */}
+                            {panelPage === 2 && (
+                                <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                                    <label style={labelSt}>Instrução para tratamento de fotos</label>
+                                    <textarea value={cfgDraft.prdFotos}
+                                        onChange={e => setCfgDraft(d => ({ ...d, prdFotos: e.target.value }))}
+                                        placeholder={"Exemplos:\n• Remova o fundo e coloque fundo branco\n• Aplique filtro vintage\n• Deixe em branco para desativar"}
+                                        style={{ ...inputSt, flex: 1, minHeight: 130, resize: "vertical", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}
+                                    />
+                                    <div style={{
+                                        padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                                        background: cfgDraft.prdFotos.trim() ? "rgba(90,144,112,0.15)" : C.surface,
+                                        color: cfgDraft.prdFotos.trim() ? C.green : C.textDim
+                                    }}>
+                                        {cfgDraft.prdFotos.trim() ? "✓ Tratamento ativo" : "○ Desativado"}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Ilustrações IA */}
+                            {panelPage === 3 && (
+                                <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+                                    <label style={labelSt}>PRD do sistema para ilustrações</label>
+                                    <p style={{ margin: "0 0 8px", fontSize: 12, color: C.textMut }}>Esta instrução é combinada com o prompt do participante. Tem prioridade sobre o prompt do participante.</p>
+                                    <textarea value={cfgDraft.prdIlustracoes || ""}
+                                        onChange={e => setCfgDraft(d => ({ ...d, prdIlustracoes: e.target.value }))}
+                                        placeholder={"Exemplo:\n• Crie ilustrações no estilo Pixar/Disney\n• Use cores vibrantes e cenário tropical\n• Os personagens devem parecer caricaturas fofas"}
+                                        style={{ ...inputSt, flex: 1, minHeight: 130, resize: "vertical", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}
+                                    />
+                                    <div style={{
+                                        padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
+                                        background: (cfgDraft.prdIlustracoes || "").trim() ? "rgba(90,144,112,0.15)" : C.surface,
+                                        color: (cfgDraft.prdIlustracoes || "").trim() ? C.green : C.textDim
+                                    }}>
+                                        {(cfgDraft.prdIlustracoes || "").trim() ? "✓ PRD de Ilustrações ativo" : "○ Desativado (só o prompt do participante será usado)"}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Deploy */}
+                            {panelPage === 4 && (
+                                <div>
+                                    <div style={{ background: "rgba(212,86,122,0.08)", border: `1px solid ${C.borderHi}`, borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
+                                        <label style={{ ...labelSt, color: C.pinkLt }}>🤖 Gemini API Key</label>
+                                        <p style={{ margin: "0 0 8px", fontSize: 12, color: C.textMut }}>Necessário para Importar Lista com IA</p>
+                                        <input type="password" value={admDraft.geminiKey}
+                                            onChange={e => setAdmDraft(d => ({ ...d, geminiKey: e.target.value }))}
+                                            placeholder="AIza..." style={{ ...inputSt, marginBottom: 0 }} />
+                                    </div>
+                                    {[["vercelToken", "Vercel Token"], ["vercelProject", "Project ID"], ["vercelOrg", "Org ID"], ["githubRepo", "GitHub Repo"]].map(([k, l]) => (
+                                        <div key={k}>
+                                            <label style={labelSt}>{l}</label>
+                                            <input type="password" value={admDraft[k]}
+                                                onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
+                                                style={{ ...inputSt, marginBottom: 10 }} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Banco */}
+                            {panelPage === 5 && (
+                                <div>
+                                    <div style={{ display: "flex", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden" }}>
+                                        {[["development", "🐳 Local"], ["production", "☁️ Supabase"]].map(([v, l]) => (
+                                            <button key={v} onClick={() => setAdmDraft(d => ({ ...d, env: v }))}
+                                                style={{
+                                                    flex: 1, padding: "13px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, transition: "all .15s",
+                                                    background: admDraft.env === v ? C.pink : "transparent", color: admDraft.env === v ? "#fff" : C.textMut,
+                                                    WebkitTapHighlightColor: "transparent"
+                                                }}>
+                                                {l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {admDraft.env === "development" ? (
+                                        [["pgHost", "Host", "localhost"], ["pgPort", "Porta", "5432"], ["pgDb", "Database", "bbb_malu"],
+                                        ["pgUser", "Usuário", "postgres"], ["pgPassword", "Senha", "postgres"]].map(([k, l, ph]) => (
+                                            <div key={k}>
+                                                <label style={labelSt}>{l}</label>
+                                                <input value={admDraft[k]} onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
+                                                    placeholder={ph} style={{ ...inputSt, marginBottom: 10 }} />
+                                            </div>
+                                        ))
+                                    ) : (
+                                        [["supaUrl", "Supabase URL", "https://xxx.supabase.co"],
+                                        ["supaAnon", "Anon Key", ""], ["supaService", "Service Role Key", ""]].map(([k, l, ph]) => (
+                                            <div key={k}>
+                                                <label style={labelSt}>{l}</label>
+                                                <input type={k.includes("Key") || k.includes("Serv") ? "password" : "text"}
+                                                    value={admDraft[k]} onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
+                                                    placeholder={ph} style={{ ...inputSt, marginBottom: 10 }} />
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            )}
+
+                            {/* App */}
+                            {panelPage === 6 && (
+                                <div>
+                                    {[["appName", "Nome do App"], ["appUrl", "URL Pública"]].map(([k, l]) => (
+                                        <div key={k}>
+                                            <label style={labelSt}>{l}</label>
+                                            <input value={cfgDraft[k] || ""} onChange={e => setCfgDraft(d => ({ ...d, [k]: e.target.value }))}
+                                                style={inputSt} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Nav + Salvar */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+                            <button onClick={() => setPanelPage(i => Math.max(0, i - 1))} disabled={panelPage === 0}
+                                style={{
+                                    width: 44, height: 44, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
+                                    color: panelPage === 0 ? C.textDim : C.text, cursor: panelPage === 0 ? "default" : "pointer", fontSize: 20,
+                                    WebkitTapHighlightColor: "transparent"
+                                }}>‹</button>
+                            <button onClick={() => setPanelPage(i => Math.min(pages.length - 1, i + 1))} disabled={panelPage === pages.length - 1}
+                                style={{
+                                    width: 44, height: 44, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
+                                    color: panelPage === pages.length - 1 ? C.textDim : C.text, cursor: panelPage === pages.length - 1 ? "default" : "pointer", fontSize: 20,
+                                    WebkitTapHighlightColor: "transparent"
+                                }}>›</button>
+                            <Btn onClick={savePanel} style={{ flex: 1 }}>Salvar</Btn>
+                        </div>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Formulário ══ */}
+                {showForm && (
+                    <Modal onClose={closeForm}>
+                        <h2 style={{ margin: "0 0 18px", color: C.pinkLt, fontSize: 18 }}>
+                            {editId !== null ? "✏️ Editar" : "➕ Novo"} Participante
+                        </h2>
+                        <label style={labelSt}>Nome *</label>
+                        <input value={form.nome} autoFocus
+                            onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+                            onKeyDown={e => e.key === "Enter" && saveForm()}
+                            placeholder="Nome completo" style={inputSt} />
+                        <label style={labelSt}>Data de eliminação (palpite)</label>
+                        <input value={form.palpite}
+                            onChange={e => {
+                                // Máscara DD/MM/AAAA
+                                let v = e.target.value.replace(/\D/g, "").slice(0, 8);
+                                if (v.length >= 3) v = v.slice(0, 2) + "/" + v.slice(2);
+                                if (v.length >= 6) v = v.slice(0, 5) + "/" + v.slice(5);
+                                setForm(f => ({ ...f, palpite: v }));
+                            }}
+                            placeholder="07/03/2025" maxLength={10} inputMode="numeric" style={inputSt} />
+                        {form.palpite && (() => {
+                            const s = calcStatus(form.palpite); const sc = STATUS_CFG[s];
+                            return <div style={{
+                                display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10,
+                                background: sc.bg, border: `1px solid ${sc.color}44`, marginBottom: 16
+                            }}>
+                                <span>{sc.icon}</span><span style={{ fontSize: 14, color: sc.color, fontWeight: 700 }}>{s}</span>
+                            </div>;
+                        })()}
+
+                        {/* Gerenciamento de Fotos (apenas ao editar) */}
+                        {editId !== null && (() => {
+                            const participant = parts.find(p => p.id === editId);
+                            const fotos = participant?.fotos || [];
+                            return (
+                                <div style={{ marginBottom: 16 }}>
+                                    <label style={labelSt}>📸 Fotos ({fotos.length})</label>
+                                    {fotos.length > 0 ? (
+                                        <div style={{
+                                            display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 8,
+                                            marginBottom: 12,
+                                        }}>
+                                            {fotos.map((url, i) => (
+                                                <div key={i} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}` }}>
+                                                    <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                                    <button onClick={() => { rmFoto(editId, i); }}
+                                                        style={{
+                                                            position: "absolute", top: 4, right: 4, width: 24, height: 24,
+                                                            borderRadius: "50%", border: "none", cursor: "pointer",
+                                                            background: "rgba(154,66,88,0.9)", color: "#fff", fontSize: 12,
+                                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                                            WebkitTapHighlightColor: "transparent",
+                                                        }}>✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p style={{ margin: "0 0 12px", fontSize: 13, color: C.textMut }}>Nenhuma foto adicionada</p>
+                                    )}
+                                    <label style={{
+                                        display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px",
+                                        borderRadius: 10, border: `1px solid ${C.borderHi}`, background: C.surface,
+                                        color: C.pinkLt, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                        WebkitTapHighlightColor: "transparent",
+                                    }}>
+                                        📸 Adicionar foto
+                                        <input type="file" accept="image/*" style={{ display: "none" }}
+                                            onChange={e => {
+                                                const f = e.target.files?.[0]; if (!f) return;
+                                                const r = new FileReader();
+                                                r.onload = ev => addFoto(editId, ev.target.result);
+                                                r.readAsDataURL(f); e.target.value = "";
+                                            }} />
+                                    </label>
+                                </div>
+                            );
+                        })()}
+
                         <div style={{ display: "flex", gap: 10 }}>
-                            <Btn onClick={checkPwd} style={{ flex: 1 }}>Entrar</Btn>
-                            <Btn onClick={() => setShowPwd(false)} color={C.surface} textColor={C.textMut}
+                            <Btn onClick={saveForm} style={{ flex: 1 }}>💾 Salvar</Btn>
+                            <Btn onClick={closeForm} color={C.surface} textColor={C.textMut}
                                 style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
                         </div>
-                    </div>
-                </Modal>
-            )}
+                    </Modal>
+                )}
 
-            {/* ══ MODAL: Painel Config ══ */}
-            {showPanel && (
-                <Modal onClose={() => setShowPanel(false)}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
-                        <div>
-                            <h2 style={{ margin: 0, color: C.pinkLt, fontSize: 18, fontWeight: 700 }}>⚙️ Configurações</h2>
-                            <p style={{ margin: "2px 0 0", fontSize: 12, color: C.textMut }}>{panelPage + 1} / {pages.length}</p>
-                        </div>
-                        <button onClick={() => setShowPanel(false)} style={{ background: "none", border: "none", color: C.textMut, fontSize: 24, cursor: "pointer", padding: 4 }}>✕</button>
-                    </div>
+                {/* ══ MODAL: Importar ══ */}
+                {showImport && (
+                    <Modal onClose={closeImport}>
+                        {/* Modal de import usa layout flex-column para manter header+botões fixos e lista rolável */}
+                        <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
 
-                    {/* Segmented control */}
-                    <div className="config-tabs" style={{ background: C.surface, borderRadius: 14, border: `1px solid ${C.border}`, marginBottom: 16 }}>
-                        {pages.map((pg, i) => (
-                            <button key={pg.key} onClick={() => setPanelPage(i)}
-                                style={{
-                                    flex: 1, padding: "8px 2px", border: "none", borderRadius: 11, cursor: "pointer",
-                                    fontSize: 11, fontWeight: 700, transition: "all .2s", lineHeight: 1.3,
-                                    background: panelPage === i ? C.pink : "transparent",
-                                    color: panelPage === i ? "#fff" : C.textMut,
-                                    WebkitTapHighlightColor: "transparent"
-                                }}>
-                                <div style={{ fontSize: 17, marginBottom: 2 }}>{pg.icon}</div>
-                                <div>{pg.label}</div>
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Dots */}
-                    <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 18 }}>
-                        {pages.map((_, i) => (
-                            <button key={i} onClick={() => setPanelPage(i)}
-                                style={{
-                                    width: panelPage === i ? 20 : 6, height: 6, borderRadius: 3, border: "none",
-                                    cursor: "pointer", transition: "all .25s", padding: 0,
-                                    background: panelPage === i ? C.pink : C.border
-                                }} />
-                        ))}
-                    </div>
-
-                    {/* Conteúdo da página */}
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-
-                        {/* Participantes */}
-                        {panelPage === 0 && (
-                            <div>
-                                <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-                                    <Btn onClick={() => { setShowPanel(false); openNew(); }} style={{ flex: 1, fontSize: 14 }}>➕ Novo</Btn>
-                                    <Btn onClick={() => { setShowPanel(false); setShowImport(true); setImportRes(null); setImportTxt(""); }}
-                                        color={C.surface} textColor={C.pinkLt}
-                                        style={{ flex: 1, border: `1px solid ${C.borderHi}`, fontSize: 14 }}>🤖 Importar</Btn>
+                            {/* Header fixo */}
+                            <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                                    <h2 style={{ margin: 0, color: C.pinkLt, fontSize: 18 }}>🤖 Importar Lista</h2>
+                                    <button onClick={closeImport} style={{ background: "none", border: "none", color: C.textMut, fontSize: 24, cursor: "pointer", padding: 4 }}>✕</button>
                                 </div>
-                                <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                                    {Object.entries(STATUS_CFG).map(([s, sc]) => (
-                                        <div key={s} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: `1px solid ${C.border}` }}>
-                                            <span style={{ fontSize: 16 }}>{sc.icon}</span>
-                                            <span style={{ fontSize: 14, color: sc.color, fontWeight: 600 }}>{s}</span>
-                                            <span style={{ fontSize: 13, color: C.textMut, marginLeft: "auto", fontWeight: 700 }}>{counts[s]}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                                <p style={{ margin: "0 0 14px", fontSize: 13, color: C.textMut }}>
+                                    Cole a lista em qualquer formato. A IA identifica nomes e palpites.
+                                </p>
                             </div>
-                        )}
 
-                        {/* Extras */}
-                        {panelPage === 1 && (
-                            <div>
-                                <Btn onClick={() => { setShowPanel(false); openNewExtra(); }} style={{ fontSize: 14, marginBottom: 14 }} full>🎭 Novo Elemento</Btn>
-                                {extras.length === 0 ? (
-                                    <p style={{ textAlign: "center", fontSize: 14, color: C.textDim, padding: "30px 0" }}>Nenhum elemento extra cadastrado</p>
+                            {/* Conteúdo scrollável */}
+                            <div style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0, display: "flex", flexDirection: "column" }}>
+                                {!importRes ? (
+                                    <textarea value={importTxt} onChange={e => setImportTxt(e.target.value)}
+                                        disabled={importLoad}
+                                        placeholder={"Ana Silva - março/25\nJoão Pedro: 04/25\n1. Maria Fernanda (maio de 2025)"}
+                                        style={{ ...inputSt, flex: 1, minHeight: 120, resize: "none", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6 }}
+                                    />
                                 ) : (
-                                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                                        {extras.map(el => (
-                                            <div key={el.id} style={{
-                                                display: "flex", alignItems: "center", gap: 12, padding: "10px 12px",
-                                                background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`,
-                                            }}>
-                                                {el.foto ? (
-                                                    <img src={el.foto} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
-                                                ) : (
-                                                    <div style={{ width: 44, height: 44, borderRadius: 8, background: C.border, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20 }}>🎭</div>
-                                                )}
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontSize: 14, fontWeight: 700, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{el.nome}</div>
-                                                    {el.descricao && <div style={{ fontSize: 12, color: C.textMut, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{el.descricao}</div>}
-                                                </div>
-                                                <button onClick={() => { setShowPanel(false); openEditExtra(el); }}
-                                                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.textMut, padding: 4, WebkitTapHighlightColor: "transparent" }}>✏️</button>
-                                                <button onClick={() => removeExtra(el.id)}
-                                                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: C.red, padding: 4, WebkitTapHighlightColor: "transparent" }}>🗑️</button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Fotos IA */}
-                        {panelPage === 2 && (
-                            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                                <label style={labelSt}>Instrução para tratamento de fotos</label>
-                                <textarea value={cfgDraft.prdFotos}
-                                    onChange={e => setCfgDraft(d => ({ ...d, prdFotos: e.target.value }))}
-                                    placeholder={"Exemplos:\n• Remova o fundo e coloque fundo branco\n• Aplique filtro vintage\n• Deixe em branco para desativar"}
-                                    style={{ ...inputSt, flex: 1, minHeight: 130, resize: "vertical", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}
-                                />
-                                <div style={{
-                                    padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                                    background: cfgDraft.prdFotos.trim() ? "rgba(90,144,112,0.15)" : C.surface,
-                                    color: cfgDraft.prdFotos.trim() ? C.green : C.textDim
-                                }}>
-                                    {cfgDraft.prdFotos.trim() ? "✓ Tratamento ativo" : "○ Desativado"}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Ilustrações IA */}
-                        {panelPage === 3 && (
-                            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                                <label style={labelSt}>PRD do sistema para ilustrações</label>
-                                <p style={{ margin: "0 0 8px", fontSize: 12, color: C.textMut }}>Esta instrução é combinada com o prompt do participante. Tem prioridade sobre o prompt do participante.</p>
-                                <textarea value={cfgDraft.prdIlustracoes || ""}
-                                    onChange={e => setCfgDraft(d => ({ ...d, prdIlustracoes: e.target.value }))}
-                                    placeholder={"Exemplo:\n• Crie ilustrações no estilo Pixar/Disney\n• Use cores vibrantes e cenário tropical\n• Os personagens devem parecer caricaturas fofas"}
-                                    style={{ ...inputSt, flex: 1, minHeight: 130, resize: "vertical", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6, marginBottom: 10 }}
-                                />
-                                <div style={{
-                                    padding: "10px 14px", borderRadius: 10, fontSize: 13, fontWeight: 600,
-                                    background: (cfgDraft.prdIlustracoes || "").trim() ? "rgba(90,144,112,0.15)" : C.surface,
-                                    color: (cfgDraft.prdIlustracoes || "").trim() ? C.green : C.textDim
-                                }}>
-                                    {(cfgDraft.prdIlustracoes || "").trim() ? "✓ PRD de Ilustrações ativo" : "○ Desativado (só o prompt do participante será usado)"}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Deploy */}
-                        {panelPage === 4 && (
-                            <div>
-                                <div style={{ background: "rgba(212,86,122,0.08)", border: `1px solid ${C.borderHi}`, borderRadius: 12, padding: "12px 14px", marginBottom: 14 }}>
-                                    <label style={{ ...labelSt, color: C.pinkLt }}>🤖 Gemini API Key</label>
-                                    <p style={{ margin: "0 0 8px", fontSize: 12, color: C.textMut }}>Necessário para Importar Lista com IA</p>
-                                    <input type="password" value={admDraft.geminiKey}
-                                        onChange={e => setAdmDraft(d => ({ ...d, geminiKey: e.target.value }))}
-                                        placeholder="AIza..." style={{ ...inputSt, marginBottom: 0 }} />
-                                </div>
-                                {[["vercelToken", "Vercel Token"], ["vercelProject", "Project ID"], ["vercelOrg", "Org ID"], ["githubRepo", "GitHub Repo"]].map(([k, l]) => (
-                                    <div key={k}>
-                                        <label style={labelSt}>{l}</label>
-                                        <input type="password" value={admDraft[k]}
-                                            onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
-                                            style={{ ...inputSt, marginBottom: 10 }} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Banco */}
-                        {panelPage === 5 && (
-                            <div>
-                                <div style={{ display: "flex", background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 14, overflow: "hidden" }}>
-                                    {[["development", "🐳 Local"], ["production", "☁️ Supabase"]].map(([v, l]) => (
-                                        <button key={v} onClick={() => setAdmDraft(d => ({ ...d, env: v }))}
-                                            style={{
-                                                flex: 1, padding: "13px", border: "none", cursor: "pointer", fontWeight: 700, fontSize: 14, transition: "all .15s",
-                                                background: admDraft.env === v ? C.pink : "transparent", color: admDraft.env === v ? "#fff" : C.textMut,
-                                                WebkitTapHighlightColor: "transparent"
-                                            }}>
-                                            {l}
-                                        </button>
-                                    ))}
-                                </div>
-                                {admDraft.env === "development" ? (
-                                    [["pgHost", "Host", "localhost"], ["pgPort", "Porta", "5432"], ["pgDb", "Database", "bbb_malu"],
-                                    ["pgUser", "Usuário", "postgres"], ["pgPassword", "Senha", "postgres"]].map(([k, l, ph]) => (
-                                        <div key={k}>
-                                            <label style={labelSt}>{l}</label>
-                                            <input value={admDraft[k]} onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
-                                                placeholder={ph} style={{ ...inputSt, marginBottom: 10 }} />
+                                    <>
+                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                                            <span style={{ fontSize: 13, color: C.textMut }}>
+                                                {importRes.length} participante(s) encontrado(s)
+                                            </span>
+                                            <button onClick={() => setImportRes(r => r.map(x => ({ ...x, checked: !r.every(y => y.checked) })))}
+                                                style={{
+                                                    background: "none", border: `1px solid ${C.borderHi}`, borderRadius: 8, padding: "5px 12px",
+                                                    color: C.pinkLt, cursor: "pointer", fontSize: 12, fontWeight: 600
+                                                }}>
+                                                {importRes.every(x => x.checked) ? "Desmarcar" : "Marcar"} todos
+                                            </button>
                                         </div>
-                                    ))
-                                ) : (
-                                    [["supaUrl", "Supabase URL", "https://xxx.supabase.co"],
-                                    ["supaAnon", "Anon Key", ""], ["supaService", "Service Role Key", ""]].map(([k, l, ph]) => (
-                                        <div key={k}>
-                                            <label style={labelSt}>{l}</label>
-                                            <input type={k.includes("Key") || k.includes("Serv") ? "password" : "text"}
-                                                value={admDraft[k]} onChange={e => setAdmDraft(d => ({ ...d, [k]: e.target.value }))}
-                                                placeholder={ph} style={{ ...inputSt, marginBottom: 10 }} />
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        )}
-
-                        {/* App */}
-                        {panelPage === 6 && (
-                            <div>
-                                {[["appName", "Nome do App"], ["appUrl", "URL Pública"]].map(([k, l]) => (
-                                    <div key={k}>
-                                        <label style={labelSt}>{l}</label>
-                                        <input value={cfgDraft[k] || ""} onChange={e => setCfgDraft(d => ({ ...d, [k]: e.target.value }))}
-                                            style={inputSt} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Nav + Salvar */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
-                        <button onClick={() => setPanelPage(i => Math.max(0, i - 1))} disabled={panelPage === 0}
-                            style={{
-                                width: 44, height: 44, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
-                                color: panelPage === 0 ? C.textDim : C.text, cursor: panelPage === 0 ? "default" : "pointer", fontSize: 20,
-                                WebkitTapHighlightColor: "transparent"
-                            }}>‹</button>
-                        <button onClick={() => setPanelPage(i => Math.min(pages.length - 1, i + 1))} disabled={panelPage === pages.length - 1}
-                            style={{
-                                width: 44, height: 44, borderRadius: 12, border: `1px solid ${C.border}`, background: C.surface,
-                                color: panelPage === pages.length - 1 ? C.textDim : C.text, cursor: panelPage === pages.length - 1 ? "default" : "pointer", fontSize: 20,
-                                WebkitTapHighlightColor: "transparent"
-                            }}>›</button>
-                        <Btn onClick={savePanel} style={{ flex: 1 }}>Salvar</Btn>
-                    </div>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Formulário ══ */}
-            {showForm && (
-                <Modal onClose={closeForm}>
-                    <h2 style={{ margin: "0 0 18px", color: C.pinkLt, fontSize: 18 }}>
-                        {editId !== null ? "✏️ Editar" : "➕ Novo"} Participante
-                    </h2>
-                    <label style={labelSt}>Nome *</label>
-                    <input value={form.nome} autoFocus
-                        onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
-                        onKeyDown={e => e.key === "Enter" && saveForm()}
-                        placeholder="Nome completo" style={inputSt} />
-                    <label style={labelSt}>Data de eliminação (palpite)</label>
-                    <input value={form.palpite}
-                        onChange={e => {
-                            // Máscara DD/MM/AAAA
-                            let v = e.target.value.replace(/\D/g, "").slice(0, 8);
-                            if (v.length >= 3) v = v.slice(0, 2) + "/" + v.slice(2);
-                            if (v.length >= 6) v = v.slice(0, 5) + "/" + v.slice(5);
-                            setForm(f => ({ ...f, palpite: v }));
-                        }}
-                        placeholder="07/03/2025" maxLength={10} inputMode="numeric" style={inputSt} />
-                    {form.palpite && (() => {
-                        const s = calcStatus(form.palpite); const sc = STATUS_CFG[s];
-                        return <div style={{
-                            display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 10,
-                            background: sc.bg, border: `1px solid ${sc.color}44`, marginBottom: 16
-                        }}>
-                            <span>{sc.icon}</span><span style={{ fontSize: 14, color: sc.color, fontWeight: 700 }}>{s}</span>
-                        </div>;
-                    })()}
-
-                    {/* Gerenciamento de Fotos (apenas ao editar) */}
-                    {editId !== null && (() => {
-                        const participant = parts.find(p => p.id === editId);
-                        const fotos = participant?.fotos || [];
-                        return (
-                            <div style={{ marginBottom: 16 }}>
-                                <label style={labelSt}>📸 Fotos ({fotos.length})</label>
-                                {fotos.length > 0 ? (
-                                    <div style={{
-                                        display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(80px, 1fr))", gap: 8,
-                                        marginBottom: 12,
-                                    }}>
-                                        {fotos.map((url, i) => (
-                                            <div key={i} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}` }}>
-                                                <img src={url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                                                <button onClick={() => { rmFoto(editId, i); }}
+                                        <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 14 }}>
+                                            {importRes.map(item => (
+                                                <div key={item.id}
+                                                    onClick={() => setImportRes(r => r.map(x => x.id === item.id ? { ...x, checked: !x.checked } : x))}
                                                     style={{
-                                                        position: "absolute", top: 4, right: 4, width: 24, height: 24,
-                                                        borderRadius: "50%", border: "none", cursor: "pointer",
-                                                        background: "rgba(154,66,88,0.9)", color: "#fff", fontSize: 12,
-                                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                                        WebkitTapHighlightColor: "transparent",
-                                                    }}>✕</button>
-                                            </div>
-                                        ))}
+                                                        display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
+                                                        borderBottom: `1px solid ${C.border}`, cursor: "pointer",
+                                                        background: item.checked ? "rgba(212,86,122,0.06)" : "transparent"
+                                                    }}>
+                                                    <div style={{
+                                                        width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                                                        border: `2px solid ${item.checked ? C.pink : C.border}`,
+                                                        background: item.checked ? C.pink : "transparent",
+                                                        display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", fontWeight: 700
+                                                    }}>
+                                                        {item.checked ? "✓" : ""}
+                                                    </div>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{
+                                                            fontSize: 14, fontWeight: 600, color: C.text,
+                                                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+                                                        }}>{item.nome}</div>
+                                                        <div style={{ fontSize: 12, color: C.textDim }}>
+                                                            {fmtPalpite(item.palpite) || "sem palpite"}
+                                                            {item.palpite && <span style={{ color: STATUS_CFG[calcStatus(item.palpite)]?.color, marginLeft: 8 }}>
+                                                                {STATUS_CFG[calcStatus(item.palpite)]?.icon} {calcStatus(item.palpite)}
+                                                            </span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Botões fixos no fundo */}
+                            <div style={{ padding: "12px 20px 20px", flexShrink: 0, borderTop: `1px solid ${C.border}` }}>
+                                {!importRes ? (
+                                    <div style={{ display: "flex", gap: 10 }}>
+                                        <Btn onClick={processImport} disabled={importLoad} style={{ flex: 1 }}>
+                                            {importLoad ? "⏳ Processando..." : "✨ Identificar com IA"}
+                                        </Btn>
+                                        <Btn onClick={closeImport} color={C.surface} textColor={C.textMut}
+                                            style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
                                     </div>
                                 ) : (
-                                    <p style={{ margin: "0 0 12px", fontSize: 13, color: C.textMut }}>Nenhuma foto adicionada</p>
+                                    <div style={{ display: "flex", gap: 10 }}>
+                                        <Btn onClick={saveImport} style={{ flex: 1 }}>
+                                            💾 Salvar {importRes.filter(x => x.checked).length}
+                                        </Btn>
+                                        <Btn onClick={() => setImportRes(null)} color={C.surface} textColor={C.textMut}
+                                            style={{ border: `1px solid ${C.border}` }}>← Voltar</Btn>
+                                        <Btn onClick={closeImport} color={C.surface} textColor={C.textMut}
+                                            style={{ border: `1px solid ${C.border}` }}>✕</Btn>
+                                    </div>
                                 )}
-                                <label style={{
-                                    display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 16px",
-                                    borderRadius: 10, border: `1px solid ${C.borderHi}`, background: C.surface,
-                                    color: C.pinkLt, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                                    WebkitTapHighlightColor: "transparent",
-                                }}>
-                                    📸 Adicionar foto
-                                    <input type="file" accept="image/*" style={{ display: "none" }}
-                                        onChange={e => {
-                                            const f = e.target.files?.[0]; if (!f) return;
-                                            const r = new FileReader();
-                                            r.onload = ev => addFoto(editId, ev.target.result);
-                                            r.readAsDataURL(f); e.target.value = "";
+                            </div>
+
+                        </div>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Preview de Foto ══ */}
+                {fotoPreview && (
+                    <Modal onClose={() => setFotoPreview(null)}>
+                        <div style={{ padding: "20px 16px 8px", textAlign: "center" }}>
+                            <h3 style={{ margin: "0 0 16px", color: C.pinkLt, fontSize: 17 }}>📸 Prévia da foto</h3>
+
+                            {fotoPreview.originalUrl ? (
+                                /* ── Slider Antes/Depois ── */
+                                <div style={{ marginBottom: 16 }}>
+                                    {/* Labels */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: C.textMut, textTransform: "uppercase", letterSpacing: 0.8 }}>Original</span>
+                                        <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: 0.8 }}>✨ Com IA</span>
+                                    </div>
+                                    {/* Container */}
+                                    <div
+                                        ref={sliderRef}
+                                        onMouseDown={(e) => {
+                                            const rect = sliderRef.current?.getBoundingClientRect();
+                                            if (!rect) return;
+                                            const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+                                            setSliderPos((x / rect.width) * 100);
+                                            const onMM = (ev) => { const xx = Math.max(0, Math.min(ev.clientX - rect.left, rect.width)); setSliderPos((xx / rect.width) * 100); };
+                                            const stop = () => { document.removeEventListener("mousemove", onMM); document.removeEventListener("mouseup", stop); };
+                                            document.addEventListener("mousemove", onMM);
+                                            document.addEventListener("mouseup", stop);
+                                        }}
+                                        onTouchStart={(e) => {
+                                            const rect = sliderRef.current?.getBoundingClientRect();
+                                            if (!rect) return;
+                                            const x = Math.max(0, Math.min(e.touches[0].clientX - rect.left, rect.width));
+                                            setSliderPos((x / rect.width) * 100);
+                                            const onTM = (ev) => { ev.preventDefault(); const xx = Math.max(0, Math.min(ev.touches[0].clientX - rect.left, rect.width)); setSliderPos((xx / rect.width) * 100); };
+                                            const stop = () => { document.removeEventListener("touchmove", onTM); document.removeEventListener("touchend", stop); };
+                                            document.addEventListener("touchmove", onTM, { passive: false });
+                                            document.addEventListener("touchend", stop);
+                                        }}
+                                        style={{
+                                            position: "relative", width: "100%", aspectRatio: "3/4",
+                                            borderRadius: 12, overflow: "hidden", cursor: "col-resize",
+                                            border: `1px solid ${C.border}`, userSelect: "none", WebkitUserSelect: "none",
+                                            touchAction: "none",
+                                        }}
+                                    >
+                                        {/* Camada de baixo: Com IA (visível completa) */}
+                                        <img src={fotoPreview.url} alt="Processada"
+                                            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+                                            draggable={false} />
+
+                                        {/* Camada de cima: Original (clip pela posição do slider) */}
+                                        <div style={{
+                                            position: "absolute", inset: 0,
+                                            clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
+                                        }}>
+                                            <img src={fotoPreview.originalUrl} alt="Original"
+                                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                                draggable={false} />
+                                        </div>
+
+                                        {/* Linha divisória */}
+                                        <div style={{
+                                            position: "absolute", top: 0, bottom: 0,
+                                            left: `${sliderPos}%`, transform: "translateX(-50%)",
+                                            width: 3, background: "#fff",
+                                            boxShadow: "0 0 8px rgba(0,0,0,0.5)",
+                                            zIndex: 2,
                                         }} />
-                                </label>
+
+                                        {/* Handle circular */}
+                                        <div style={{
+                                            position: "absolute", top: "50%",
+                                            left: `${sliderPos}%`, transform: "translate(-50%, -50%)",
+                                            width: 36, height: 36, borderRadius: "50%",
+                                            background: "#fff", border: "2px solid rgba(0,0,0,0.2)",
+                                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                                            display: "flex", alignItems: "center", justifyContent: "center",
+                                            zIndex: 3, fontSize: 14, color: "#333", fontWeight: 700,
+                                            cursor: "col-resize",
+                                        }}>
+                                            ◀▶
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Apenas a foto original (sem processamento IA) */
+                                <div style={{
+                                    borderRadius: 12, overflow: "hidden", marginBottom: 16,
+                                    maxHeight: "55dvh", display: "flex", alignItems: "center", justifyContent: "center",
+                                    background: C.surface
+                                }}>
+                                    <img src={fotoPreview.url} alt=""
+                                        style={{ maxWidth: "100%", maxHeight: "55dvh", objectFit: "contain", display: "block" }} />
+                                </div>
+                            )}
+
+                            <div style={{ display: "flex", gap: 10 }}>
+                                <Btn onClick={confirmFoto} style={{ flex: 1 }}>💾 Salvar</Btn>
+                                <Btn onClick={() => setFotoPreview(null)} color={C.surface} textColor={C.textMut}
+                                    style={{ border: `1px solid ${C.border}`, flex: 1 }}>Cancelar</Btn>
                             </div>
-                        );
-                    })()}
+                        </div>
+                    </Modal>
+                )}
 
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Btn onClick={saveForm} style={{ flex: 1 }}>💾 Salvar</Btn>
-                        <Btn onClick={closeForm} color={C.surface} textColor={C.textMut}
-                            style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
-                    </div>
-                </Modal>
-            )}
+                {/* ══ MODAL: Elemento Extra ══ */}
+                {showExtraForm && (
+                    <Modal onClose={() => { setShowExtraForm(false); setEditExtraId(null); }}>
+                        <h2 style={{ margin: "0 0 18px", color: C.pinkLt, fontSize: 18 }}>
+                            {editExtraId !== null ? "✏️ Editar" : "🎭 Novo"} Elemento Extra
+                        </h2>
+                        <label style={labelSt}>Nome *</label>
+                        <input value={extraForm.nome} autoFocus
+                            onChange={e => setExtraForm(f => ({ ...f, nome: e.target.value }))}
+                            placeholder="Ex: Prova do Líder, Big Fone..." style={inputSt} />
+                        <label style={labelSt}>Descrição</label>
+                        <textarea value={extraForm.descricao}
+                            onChange={e => setExtraForm(f => ({ ...f, descricao: e.target.value }))}
+                            placeholder="Descrição do elemento (opcional)"
+                            style={{ ...inputSt, height: 80, resize: "vertical", fontSize: 14, lineHeight: 1.5 }} />
 
-            {/* ══ MODAL: Importar ══ */}
-            {showImport && (
-                <Modal onClose={closeImport}>
-                    {/* Modal de import usa layout flex-column para manter header+botões fixos e lista rolável */}
-                    <div style={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}>
-
-                        {/* Header fixo */}
-                        <div style={{ padding: "20px 20px 0", flexShrink: 0 }}>
-                            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                                <h2 style={{ margin: 0, color: C.pinkLt, fontSize: 18 }}>🤖 Importar Lista</h2>
-                                <button onClick={closeImport} style={{ background: "none", border: "none", color: C.textMut, fontSize: 24, cursor: "pointer", padding: 4 }}>✕</button>
+                        <label style={labelSt}>📸 Foto</label>
+                        {extraForm.foto ? (
+                            <div style={{ position: "relative", marginBottom: 12, maxWidth: 180 }}>
+                                <img src={extraForm.foto} alt="" style={{ width: "100%", borderRadius: 10, border: `1px solid ${C.border}` }} />
+                                <button onClick={() => setExtraForm(f => ({ ...f, foto: "" }))}
+                                    style={{
+                                        position: "absolute", top: 6, right: 6, width: 26, height: 26,
+                                        borderRadius: "50%", border: "none", cursor: "pointer",
+                                        background: "rgba(154,66,88,0.9)", color: "#fff", fontSize: 13,
+                                        display: "flex", alignItems: "center", justifyContent: "center",
+                                    }}>✕</button>
                             </div>
-                            <p style={{ margin: "0 0 14px", fontSize: 13, color: C.textMut }}>
-                                Cole a lista em qualquer formato. A IA identifica nomes e palpites.
+                        ) : (
+                            <label style={{
+                                display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px",
+                                borderRadius: 10, border: `1px solid ${C.borderHi}`, background: C.surface,
+                                color: C.pinkLt, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                marginBottom: 16,
+                            }}>
+                                📸 Selecionar foto
+                                <input type="file" accept="image/*" style={{ display: "none" }}
+                                    onChange={e => {
+                                        const f = e.target.files?.[0]; if (!f) return;
+                                        const r = new FileReader();
+                                        r.onload = ev => setExtraForm(prev => ({ ...prev, foto: ev.target.result }));
+                                        r.readAsDataURL(f); e.target.value = "";
+                                    }} />
+                            </label>
+                        )}
+
+                        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                            <Btn onClick={saveExtra} style={{ flex: 1 }}>💾 Salvar</Btn>
+                            <Btn onClick={() => { setShowExtraForm(false); setEditExtraId(null); }} color={C.surface} textColor={C.textMut}
+                                style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
+                        </div>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Quem é você? — Step 1: Selecionar ══ */}
+                {showIdentity && !identityConfirm && (
+                    <Modal onClose={() => { }}>
+                        <div style={{ textAlign: "center", marginBottom: 16 }}>
+                            <div style={{ fontSize: 40, marginBottom: 8 }}>👤</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Quem é você?</h3>
+                            <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Selecione seu nome para continuar</p>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10, maxHeight: "60vh", overflowY: "auto", padding: "4px" }}>
+                            {parts.map(p => {
+                                const isElim = calcStatus(p.palpite) === "Eliminado";
+                                const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
+                                return (
+                                    <button key={p.id} onClick={() => setIdentityConfirm(p)}
+                                        style={{
+                                            background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+                                            padding: 6, cursor: "pointer", textAlign: "center", transition: "all .15s",
+                                        }}>
+                                        <div style={{ position: "relative", width: 72, height: 72, margin: "0 auto 4px", borderRadius: 10, overflow: "hidden" }}>
+                                            {thumbUrl ? (
+                                                <img src={thumbUrl} alt={p.nome}
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
+                                            ) : (
+                                                <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>
+                                                    {p.nome?.[0]}
+                                                </div>
+                                            )}
+                                            {isElim && (
+                                                <div style={{
+                                                    position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                                                    background: "rgba(0,0,0,0.3)", pointerEvents: "none",
+                                                }}>
+                                                    <span style={{
+                                                        color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: 800,
+                                                        letterSpacing: 1.5, transform: "rotate(-35deg)",
+                                                        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                                                    }}>ELIMINADO(A)</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 11, color: isElim ? C.textMut : C.text, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                            {p.nome}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Confirmar identidade — Step 2 ══ */}
+                {showIdentity && identityConfirm && (
+                    <Modal onClose={() => setIdentityConfirm(null)}>
+                        <div style={{ textAlign: "center", marginBottom: 20 }}>
+                            <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Você é <span style={{ color: C.pinkLt }}>{identityConfirm.nome}</span>?</h3>
+                        </div>
+
+                        {/* Foto do participante */}
+                        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+                            <div style={{ width: 140, height: 140, borderRadius: 16, overflow: "hidden", border: `3px solid ${C.pinkLt}`, boxShadow: `0 0 24px rgba(200,100,150,0.3)` }}>
+                                {identityConfirm.fotos?.[0] ? (
+                                    <img src={identityConfirm.fotos[0]} alt={identityConfirm.nome}
+                                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                                ) : (
+                                    <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, color: C.text }}>
+                                        {identityConfirm.nome?.[0]}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Aviso permanente */}
+                        <div style={{
+                            background: "rgba(200,144,64,0.12)", border: "1px solid rgba(200,144,64,0.3)",
+                            borderRadius: 12, padding: "12px 14px", marginBottom: 20, textAlign: "center",
+                        }}>
+                            <p style={{ color: "#C89040", fontSize: 13, fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
+                                ⚠️ Atenção: esta escolha é definitiva. Depois de confirmar, o app vai sempre reconhecer que é você quem está usando. Não será possível trocar de identidade.
                             </p>
                         </div>
 
-                        {/* Conteúdo scrollável */}
-                        <div style={{ flex: 1, overflowY: "auto", padding: "0 20px", minHeight: 0, display: "flex", flexDirection: "column" }}>
-                            {!importRes ? (
-                                <textarea value={importTxt} onChange={e => setImportTxt(e.target.value)}
-                                    disabled={importLoad}
-                                    placeholder={"Ana Silva - março/25\nJoão Pedro: 04/25\n1. Maria Fernanda (maio de 2025)"}
-                                    style={{ ...inputSt, flex: 1, minHeight: 120, resize: "none", fontFamily: "monospace", fontSize: 13, lineHeight: 1.6 }}
-                                />
-                            ) : (
-                                <>
-                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                                        <span style={{ fontSize: 13, color: C.textMut }}>
-                                            {importRes.length} participante(s) encontrado(s)
-                                        </span>
-                                        <button onClick={() => setImportRes(r => r.map(x => ({ ...x, checked: !r.every(y => y.checked) })))}
-                                            style={{
-                                                background: "none", border: `1px solid ${C.borderHi}`, borderRadius: 8, padding: "5px 12px",
-                                                color: C.pinkLt, cursor: "pointer", fontSize: 12, fontWeight: 600
-                                            }}>
-                                            {importRes.every(x => x.checked) ? "Desmarcar" : "Marcar"} todos
-                                        </button>
-                                    </div>
-                                    <div style={{ borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 14 }}>
-                                        {importRes.map(item => (
-                                            <div key={item.id}
-                                                onClick={() => setImportRes(r => r.map(x => x.id === item.id ? { ...x, checked: !x.checked } : x))}
-                                                style={{
-                                                    display: "flex", alignItems: "center", gap: 12, padding: "12px 14px",
-                                                    borderBottom: `1px solid ${C.border}`, cursor: "pointer",
-                                                    background: item.checked ? "rgba(212,86,122,0.06)" : "transparent"
-                                                }}>
-                                                <div style={{
-                                                    width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-                                                    border: `2px solid ${item.checked ? C.pink : C.border}`,
-                                                    background: item.checked ? C.pink : "transparent",
-                                                    display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", fontWeight: 700
-                                                }}>
-                                                    {item.checked ? "✓" : ""}
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{
-                                                        fontSize: 14, fontWeight: 600, color: C.text,
-                                                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
-                                                    }}>{item.nome}</div>
-                                                    <div style={{ fontSize: 12, color: C.textDim }}>
-                                                        {fmtPalpite(item.palpite) || "sem palpite"}
-                                                        {item.palpite && <span style={{ color: STATUS_CFG[calcStatus(item.palpite)]?.color, marginLeft: 8 }}>
-                                                            {STATUS_CFG[calcStatus(item.palpite)]?.icon} {calcStatus(item.palpite)}
-                                                        </span>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-                        </div>
-
-                        {/* Botões fixos no fundo */}
-                        <div style={{ padding: "12px 20px 20px", flexShrink: 0, borderTop: `1px solid ${C.border}` }}>
-                            {!importRes ? (
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    <Btn onClick={processImport} disabled={importLoad} style={{ flex: 1 }}>
-                                        {importLoad ? "⏳ Processando..." : "✨ Identificar com IA"}
-                                    </Btn>
-                                    <Btn onClick={closeImport} color={C.surface} textColor={C.textMut}
-                                        style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
-                                </div>
-                            ) : (
-                                <div style={{ display: "flex", gap: 10 }}>
-                                    <Btn onClick={saveImport} style={{ flex: 1 }}>
-                                        💾 Salvar {importRes.filter(x => x.checked).length}
-                                    </Btn>
-                                    <Btn onClick={() => setImportRes(null)} color={C.surface} textColor={C.textMut}
-                                        style={{ border: `1px solid ${C.border}` }}>← Voltar</Btn>
-                                    <Btn onClick={closeImport} color={C.surface} textColor={C.textMut}
-                                        style={{ border: `1px solid ${C.border}` }}>✕</Btn>
-                                </div>
-                            )}
-                        </div>
-
-                    </div>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Preview de Foto ══ */}
-            {fotoPreview && (
-                <Modal onClose={() => setFotoPreview(null)}>
-                    <div style={{ padding: "20px 16px 8px", textAlign: "center" }}>
-                        <h3 style={{ margin: "0 0 16px", color: C.pinkLt, fontSize: 17 }}>📸 Prévia da foto</h3>
-
-                        {fotoPreview.originalUrl ? (
-                            /* ── Slider Antes/Depois ── */
-                            <div style={{ marginBottom: 16 }}>
-                                {/* Labels */}
-                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: C.textMut, textTransform: "uppercase", letterSpacing: 0.8 }}>Original</span>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: C.gold, textTransform: "uppercase", letterSpacing: 0.8 }}>✨ Com IA</span>
-                                </div>
-                                {/* Container */}
-                                <div
-                                    ref={sliderRef}
-                                    onMouseDown={(e) => {
-                                        const rect = sliderRef.current?.getBoundingClientRect();
-                                        if (!rect) return;
-                                        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-                                        setSliderPos((x / rect.width) * 100);
-                                        const onMM = (ev) => { const xx = Math.max(0, Math.min(ev.clientX - rect.left, rect.width)); setSliderPos((xx / rect.width) * 100); };
-                                        const stop = () => { document.removeEventListener("mousemove", onMM); document.removeEventListener("mouseup", stop); };
-                                        document.addEventListener("mousemove", onMM);
-                                        document.addEventListener("mouseup", stop);
-                                    }}
-                                    onTouchStart={(e) => {
-                                        const rect = sliderRef.current?.getBoundingClientRect();
-                                        if (!rect) return;
-                                        const x = Math.max(0, Math.min(e.touches[0].clientX - rect.left, rect.width));
-                                        setSliderPos((x / rect.width) * 100);
-                                        const onTM = (ev) => { ev.preventDefault(); const xx = Math.max(0, Math.min(ev.touches[0].clientX - rect.left, rect.width)); setSliderPos((xx / rect.width) * 100); };
-                                        const stop = () => { document.removeEventListener("touchmove", onTM); document.removeEventListener("touchend", stop); };
-                                        document.addEventListener("touchmove", onTM, { passive: false });
-                                        document.addEventListener("touchend", stop);
-                                    }}
-                                    style={{
-                                        position: "relative", width: "100%", aspectRatio: "3/4",
-                                        borderRadius: 12, overflow: "hidden", cursor: "col-resize",
-                                        border: `1px solid ${C.border}`, userSelect: "none", WebkitUserSelect: "none",
-                                        touchAction: "none",
-                                    }}
-                                >
-                                    {/* Camada de baixo: Com IA (visível completa) */}
-                                    <img src={fotoPreview.url} alt="Processada"
-                                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                                        draggable={false} />
-
-                                    {/* Camada de cima: Original (clip pela posição do slider) */}
-                                    <div style={{
-                                        position: "absolute", inset: 0,
-                                        clipPath: `inset(0 ${100 - sliderPos}% 0 0)`,
-                                    }}>
-                                        <img src={fotoPreview.originalUrl} alt="Original"
-                                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                            draggable={false} />
-                                    </div>
-
-                                    {/* Linha divisória */}
-                                    <div style={{
-                                        position: "absolute", top: 0, bottom: 0,
-                                        left: `${sliderPos}%`, transform: "translateX(-50%)",
-                                        width: 3, background: "#fff",
-                                        boxShadow: "0 0 8px rgba(0,0,0,0.5)",
-                                        zIndex: 2,
-                                    }} />
-
-                                    {/* Handle circular */}
-                                    <div style={{
-                                        position: "absolute", top: "50%",
-                                        left: `${sliderPos}%`, transform: "translate(-50%, -50%)",
-                                        width: 36, height: 36, borderRadius: "50%",
-                                        background: "#fff", border: "2px solid rgba(0,0,0,0.2)",
-                                        boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                        zIndex: 3, fontSize: 14, color: "#333", fontWeight: 700,
-                                        cursor: "col-resize",
-                                    }}>
-                                        ◀▶
-                                    </div>
-                                </div>
-                            </div>
-                        ) : (
-                            /* Apenas a foto original (sem processamento IA) */
-                            <div style={{
-                                borderRadius: 12, overflow: "hidden", marginBottom: 16,
-                                maxHeight: "55dvh", display: "flex", alignItems: "center", justifyContent: "center",
-                                background: C.surface
-                            }}>
-                                <img src={fotoPreview.url} alt=""
-                                    style={{ maxWidth: "100%", maxHeight: "55dvh", objectFit: "contain", display: "block" }} />
-                            </div>
-                        )}
-
+                        {/* Botões */}
                         <div style={{ display: "flex", gap: 10 }}>
-                            <Btn onClick={confirmFoto} style={{ flex: 1 }}>💾 Salvar</Btn>
-                            <Btn onClick={() => setFotoPreview(null)} color={C.surface} textColor={C.textMut}
-                                style={{ border: `1px solid ${C.border}`, flex: 1 }}>Cancelar</Btn>
+                            <Btn onClick={() => setIdentityConfirm(null)}
+                                color={C.surface} textColor={C.textMut}
+                                style={{ flex: 1, border: `1px solid ${C.border}` }}>
+                                ← Voltar
+                            </Btn>
+                            <Btn onClick={() => {
+                                saveMeId(identityConfirm.id);
+                                setIdentityConfirm(null);
+                                setShowIdentity(false);
+                                showToast(`Bem-vindo(a), ${identityConfirm.nome}! 🎉`);
+                            }} style={{ flex: 1 }}>
+                                ✅ Confirmar, sou eu!
+                            </Btn>
                         </div>
-                    </div>
-                </Modal>
-            )}
+                    </Modal>
+                )}
 
-            {/* ══ MODAL: Elemento Extra ══ */}
-            {showExtraForm && (
-                <Modal onClose={() => { setShowExtraForm(false); setEditExtraId(null); }}>
-                    <h2 style={{ margin: "0 0 18px", color: C.pinkLt, fontSize: 18 }}>
-                        {editExtraId !== null ? "✏️ Editar" : "🎭 Novo"} Elemento Extra
-                    </h2>
-                    <label style={labelSt}>Nome *</label>
-                    <input value={extraForm.nome} autoFocus
-                        onChange={e => setExtraForm(f => ({ ...f, nome: e.target.value }))}
-                        placeholder="Ex: Prova do Líder, Big Fone..." style={inputSt} />
-                    <label style={labelSt}>Descrição</label>
-                    <textarea value={extraForm.descricao}
-                        onChange={e => setExtraForm(f => ({ ...f, descricao: e.target.value }))}
-                        placeholder="Descrição do elemento (opcional)"
-                        style={{ ...inputSt, height: 80, resize: "vertical", fontSize: 14, lineHeight: 1.5 }} />
-
-                    <label style={labelSt}>📸 Foto</label>
-                    {extraForm.foto ? (
-                        <div style={{ position: "relative", marginBottom: 12, maxWidth: 180 }}>
-                            <img src={extraForm.foto} alt="" style={{ width: "100%", borderRadius: 10, border: `1px solid ${C.border}` }} />
-                            <button onClick={() => setExtraForm(f => ({ ...f, foto: "" }))}
-                                style={{
-                                    position: "absolute", top: 6, right: 6, width: 26, height: 26,
-                                    borderRadius: "50%", border: "none", cursor: "pointer",
-                                    background: "rgba(154,66,88,0.9)", color: "#fff", fontSize: 13,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                }}>✕</button>
+                {/* ══ MODAL: Criar Ilustração IA ══ */}
+                {showIaModal && (
+                    <Modal onClose={() => setShowIaModal(false)}>
+                        <div style={{ textAlign: "center", marginBottom: 16 }}>
+                            <div style={{ fontSize: 40, marginBottom: 8 }}>🎨</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Criar Ilustração com IA</h3>
+                            <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>
+                                Escolha um estilo, descreva a cena e selecione quem aparece
+                            </p>
                         </div>
-                    ) : (
-                        <label style={{
-                            display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 18px",
-                            borderRadius: 10, border: `1px solid ${C.borderHi}`, background: C.surface,
-                            color: C.pinkLt, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                            marginBottom: 16,
-                        }}>
-                            📸 Selecionar foto
-                            <input type="file" accept="image/*" style={{ display: "none" }}
-                                onChange={e => {
-                                    const f = e.target.files?.[0]; if (!f) return;
-                                    const r = new FileReader();
-                                    r.onload = ev => setExtraForm(prev => ({ ...prev, foto: ev.target.result }));
-                                    r.readAsDataURL(f); e.target.value = "";
-                                }} />
-                        </label>
-                    )}
 
-                    <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                        <Btn onClick={saveExtra} style={{ flex: 1 }}>💾 Salvar</Btn>
-                        <Btn onClick={() => { setShowExtraForm(false); setEditExtraId(null); }} color={C.surface} textColor={C.textMut}
-                            style={{ border: `1px solid ${C.border}` }}>Cancelar</Btn>
-                    </div>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Quem é você? — Step 1: Selecionar ══ */}
-            {showIdentity && !identityConfirm && (
-                <Modal onClose={() => { }}>
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                        <div style={{ fontSize: 40, marginBottom: 8 }}>👤</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Quem é você?</h3>
-                        <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Selecione seu nome para continuar</p>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10, maxHeight: "60vh", overflowY: "auto", padding: "4px" }}>
-                        {parts.map(p => {
-                            const isElim = calcStatus(p.palpite) === "Eliminado";
-                            const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
-                            return (
-                                <button key={p.id} onClick={() => setIdentityConfirm(p)}
-                                    style={{
-                                        background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
-                                        padding: 6, cursor: "pointer", textAlign: "center", transition: "all .15s",
-                                    }}>
-                                    <div style={{ position: "relative", width: 72, height: 72, margin: "0 auto 4px", borderRadius: 10, overflow: "hidden" }}>
-                                        {thumbUrl ? (
-                                            <img src={thumbUrl} alt={p.nome}
-                                                style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
-                                        ) : (
-                                            <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>
-                                                {p.nome?.[0]}
-                                            </div>
-                                        )}
-                                        {isElim && (
-                                            <div style={{
-                                                position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                                                background: "rgba(0,0,0,0.3)", pointerEvents: "none",
-                                            }}>
-                                                <span style={{
-                                                    color: "rgba(255,255,255,0.7)", fontSize: 9, fontWeight: 800,
-                                                    letterSpacing: 1.5, transform: "rotate(-35deg)",
-                                                    textShadow: "0 1px 3px rgba(0,0,0,0.5)",
-                                                }}>ELIMINADO(A)</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ fontSize: 11, color: isElim ? C.textMut : C.text, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                        {p.nome}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Confirmar identidade — Step 2 ══ */}
-            {showIdentity && identityConfirm && (
-                <Modal onClose={() => setIdentityConfirm(null)}>
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                        <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Você é <span style={{ color: C.pinkLt }}>{identityConfirm.nome}</span>?</h3>
-                    </div>
-
-                    {/* Foto do participante */}
-                    <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
-                        <div style={{ width: 140, height: 140, borderRadius: 16, overflow: "hidden", border: `3px solid ${C.pinkLt}`, boxShadow: `0 0 24px rgba(200,100,150,0.3)` }}>
-                            {identityConfirm.fotos?.[0] ? (
-                                <img src={identityConfirm.fotos[0]} alt={identityConfirm.nome}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                            ) : (
-                                <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, color: C.text }}>
-                                    {identityConfirm.nome?.[0]}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Aviso permanente */}
-                    <div style={{
-                        background: "rgba(200,144,64,0.12)", border: "1px solid rgba(200,144,64,0.3)",
-                        borderRadius: 12, padding: "12px 14px", marginBottom: 20, textAlign: "center",
-                    }}>
-                        <p style={{ color: "#C89040", fontSize: 13, fontWeight: 600, margin: 0, lineHeight: 1.5 }}>
-                            ⚠️ Atenção: esta escolha é definitiva. Depois de confirmar, o app vai sempre reconhecer que é você quem está usando. Não será possível trocar de identidade.
-                        </p>
-                    </div>
-
-                    {/* Botões */}
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Btn onClick={() => setIdentityConfirm(null)}
-                            color={C.surface} textColor={C.textMut}
-                            style={{ flex: 1, border: `1px solid ${C.border}` }}>
-                            ← Voltar
-                        </Btn>
-                        <Btn onClick={() => {
-                            saveMeId(identityConfirm.id);
-                            setIdentityConfirm(null);
-                            setShowIdentity(false);
-                            showToast(`Bem-vindo(a), ${identityConfirm.nome}! 🎉`);
-                        }} style={{ flex: 1 }}>
-                            ✅ Confirmar, sou eu!
-                        </Btn>
-                    </div>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Criar Ilustração IA ══ */}
-            {showIaModal && (
-                <Modal onClose={() => setShowIaModal(false)}>
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                        <div style={{ fontSize: 40, marginBottom: 8 }}>🎨</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Criar Ilustração com IA</h3>
-                        <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>
-                            Escolha um estilo, descreva a cena e selecione quem aparece
-                        </p>
-                    </div>
-
-                    {/* ── Seletor de Estilo ── */}
-                    <label style={labelSt}>Estilo da ilustração</label>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-                        {IA_STYLES.map(s => {
-                            const sel = iaStyle === s.id;
-                            return (
-                                <button key={s.id} onClick={() => setIaStyle(s.id)}
-                                    style={{
-                                        flex: "1 1 70px", display: "flex", flexDirection: "column", alignItems: "center",
-                                        minWidth: 70, maxWidth: 100, padding: "8px 4px", borderRadius: 12, cursor: "pointer",
-                                        background: sel ? C.pinkDim : C.card,
-                                        border: sel ? `2px solid ${C.pink}` : `1px solid ${C.border}`,
-                                        transition: "all .15s",
-                                    }}>
-                                    <span style={{ fontSize: 22, lineHeight: 1 }}>{s.icon}</span>
-                                    <span style={{ fontSize: 10, fontWeight: 700, color: sel ? C.pinkLt : C.text, marginTop: 4, lineHeight: 1.2, textAlign: "center" }}>{s.nome}</span>
-                                    <span style={{ fontSize: 8, color: sel ? C.textMut : C.textDim, marginTop: 2, lineHeight: 1.2, textAlign: "center" }}>{s.breve}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Características do estilo selecionado */}
-                    {(() => {
-                        const cur = IA_STYLES.find(s => s.id === iaStyle);
-                        return cur ? (
-                            <div style={{ marginBottom: 14, padding: "10px 12px", background: "rgba(0,0,0,0.25)", borderRadius: 10, border: `1px solid ${C.border}` }}>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: C.pinkLt, marginBottom: 4 }}>{cur.icon} {cur.nome}</div>
-                                <div style={{ fontSize: 11, color: C.textMut, lineHeight: 1.5 }}>{cur.caract}</div>
-                            </div>
-                        ) : null;
-                    })()}
-
-                    <label style={labelSt}>Prompt da ilustração</label>
-                    <textarea value={iaPrompt} onChange={e => setIaPrompt(e.target.value)}
-                        placeholder="Ex: Todos numa festa de piscina em estilo cartoon Pixar..."
-                        rows={4}
-                        style={{ ...inputSt, resize: "vertical", minHeight: 80 }} />
-
-                    <label style={labelSt}>Participantes ({iaSelParts.length} selecionados)</label>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-                        {parts.map(p => {
-                            const sel = iaSelParts.includes(p.id);
-                            const isElim = calcStatus(p.palpite) === "Eliminado";
-                            const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
-                            return (
-                                <button key={p.id} onClick={() => toggleIaPart(p.id)}
-                                    style={{
-                                        display: "flex", flexDirection: "column", alignItems: "center",
-                                        width: 64, padding: "6px 4px", borderRadius: 12, cursor: "pointer",
-                                        background: sel ? C.pinkDim : C.card,
-                                        border: sel ? `2px solid ${C.pink}` : `1px solid ${C.border}`,
-                                        transition: "all .15s",
-                                    }}>
-                                    <div style={{ position: "relative", width: 44, height: 44, borderRadius: 8, overflow: "hidden" }}>
-                                        {thumbUrl ? (
-                                            <img src={thumbUrl} alt={p.nome}
-                                                style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
-                                        ) : (
-                                            <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>
-                                                {p.nome?.[0]}
-                                            </div>
-                                        )}
-                                        {isElim && (
-                                            <div style={{
-                                                position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                                                background: "rgba(0,0,0,0.3)", pointerEvents: "none",
-                                            }}>
-                                                <span style={{
-                                                    color: "rgba(255,255,255,0.7)", fontSize: 7, fontWeight: 800,
-                                                    letterSpacing: 1, transform: "rotate(-35deg)",
-                                                    textShadow: "0 1px 3px rgba(0,0,0,0.5)",
-                                                }}>ELIMINADO(A)</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div style={{ fontSize: 9, color: sel ? C.pinkLt : (isElim ? C.textMut : C.text), fontWeight: 600, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 56, textAlign: "center" }}>
-                                        {p.nome}
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {extras.length > 0 && <>
-                        <label style={labelSt}>Extras ({iaSelExtras.length} selecionados)</label>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
-                            {extras.map(e => {
-                                const sel = iaSelExtras.includes(e.id);
+                        {/* ── Seletor de Estilo ── */}
+                        <label style={labelSt}>Estilo da ilustração</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+                            {IA_STYLES.map(s => {
+                                const sel = iaStyle === s.id;
                                 return (
-                                    <button key={e.id} onClick={() => toggleIaExtra(e.id)}
+                                    <button key={s.id} onClick={() => setIaStyle(s.id)}
+                                        style={{
+                                            flex: "1 1 70px", display: "flex", flexDirection: "column", alignItems: "center",
+                                            minWidth: 70, maxWidth: 100, padding: "8px 4px", borderRadius: 12, cursor: "pointer",
+                                            background: sel ? C.pinkDim : C.card,
+                                            border: sel ? `2px solid ${C.pink}` : `1px solid ${C.border}`,
+                                            transition: "all .15s",
+                                        }}>
+                                        <span style={{ fontSize: 22, lineHeight: 1 }}>{s.icon}</span>
+                                        <span style={{ fontSize: 10, fontWeight: 700, color: sel ? C.pinkLt : C.text, marginTop: 4, lineHeight: 1.2, textAlign: "center" }}>{s.nome}</span>
+                                        <span style={{ fontSize: 8, color: sel ? C.textMut : C.textDim, marginTop: 2, lineHeight: 1.2, textAlign: "center" }}>{s.breve}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Características do estilo selecionado */}
+                        {(() => {
+                            const cur = IA_STYLES.find(s => s.id === iaStyle);
+                            return cur ? (
+                                <div style={{ marginBottom: 14, padding: "10px 12px", background: "rgba(0,0,0,0.25)", borderRadius: 10, border: `1px solid ${C.border}` }}>
+                                    <div style={{ fontSize: 12, fontWeight: 700, color: C.pinkLt, marginBottom: 4 }}>{cur.icon} {cur.nome}</div>
+                                    <div style={{ fontSize: 11, color: C.textMut, lineHeight: 1.5 }}>{cur.caract}</div>
+                                </div>
+                            ) : null;
+                        })()}
+
+                        <label style={labelSt}>Prompt da ilustração</label>
+                        <textarea value={iaPrompt} onChange={e => setIaPrompt(e.target.value)}
+                            placeholder="Ex: Todos numa festa de piscina em estilo cartoon Pixar..."
+                            rows={4}
+                            style={{ ...inputSt, resize: "vertical", minHeight: 80 }} />
+
+                        <label style={labelSt}>Participantes ({iaSelParts.length} selecionados)</label>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                            {parts.map(p => {
+                                const sel = iaSelParts.includes(p.id);
+                                const isElim = calcStatus(p.palpite) === "Eliminado";
+                                const thumbUrl = p.thumbs?.[0] || p.fotos?.[0] || null;
+                                return (
+                                    <button key={p.id} onClick={() => toggleIaPart(p.id)}
                                         style={{
                                             display: "flex", flexDirection: "column", alignItems: "center",
                                             width: 64, padding: "6px 4px", borderRadius: 12, cursor: "pointer",
@@ -1900,217 +1868,261 @@ export default function App() {
                                             border: sel ? `2px solid ${C.pink}` : `1px solid ${C.border}`,
                                             transition: "all .15s",
                                         }}>
-                                        {e.foto ? (
-                                            <img src={e.foto} alt={e.nome}
-                                                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover" }} />
-                                        ) : (
-                                            <div style={{ width: 44, height: 44, borderRadius: 8, background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.text }}>
-                                                {e.nome?.[0]}
-                                            </div>
-                                        )}
-                                        <div style={{ fontSize: 9, color: sel ? C.pinkLt : C.textMut, fontWeight: 600, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 56, textAlign: "center" }}>
-                                            {e.nome}
+                                        <div style={{ position: "relative", width: 44, height: 44, borderRadius: 8, overflow: "hidden" }}>
+                                            {thumbUrl ? (
+                                                <img src={thumbUrl} alt={p.nome}
+                                                    style={{ width: "100%", height: "100%", objectFit: "cover", filter: isElim ? "grayscale(100%)" : "none" }} />
+                                            ) : (
+                                                <div style={{ width: "100%", height: "100%", background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.text, filter: isElim ? "grayscale(100%)" : "none" }}>
+                                                    {p.nome?.[0]}
+                                                </div>
+                                            )}
+                                            {isElim && (
+                                                <div style={{
+                                                    position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                                                    background: "rgba(0,0,0,0.3)", pointerEvents: "none",
+                                                }}>
+                                                    <span style={{
+                                                        color: "rgba(255,255,255,0.7)", fontSize: 7, fontWeight: 800,
+                                                        letterSpacing: 1, transform: "rotate(-35deg)",
+                                                        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                                                    }}>ELIMINADO(A)</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: 9, color: sel ? C.pinkLt : (isElim ? C.textMut : C.text), fontWeight: 600, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 56, textAlign: "center" }}>
+                                            {p.nome}
                                         </div>
                                     </button>
                                 );
                             })}
                         </div>
-                    </>}
 
-                    {/* Alerta quando muitos elementos selecionados */}
-                    {(iaSelParts.length + iaSelExtras.length) > 5 && (
-                        <div className="ia-warning" style={{
-                            background: "rgba(184,120,72,0.12)", border: `1px solid rgba(184,120,72,0.35)`,
-                            color: "#B87848",
-                        }}>
-                            ⚠️ Você selecionou {iaSelParts.length + iaSelExtras.length} elementos. Mais de 5 pode prejudicar a coerência da ilustração gerada.
-                        </div>
-                    )}
-
-                    <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
-                        <Btn onClick={() => setShowIaModal(false)}
-                            style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, color: C.text }}>
-                            Cancelar
-                        </Btn>
-                        <Btn onClick={gerarIlustracao} disabled={!iaPrompt.trim() || iaGenerating}
-                            style={{ flex: 2, background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)" }}>
-                            {iaGenerating ? "⏳ Gerando..." : "🎨 Gerar Ilustração"}
-                        </Btn>
-                    </div>
-                </Modal>
-            )}
-            {iaGenerating && <Spinner message="Gerando Ilustração com IA..." />}
-
-            {/* ══ MODAL: Preview e aprovação da ilustração ══ */}
-            {iaPreview && (
-                <Modal onClose={() => setIaPreview(null)}>
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                        <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Ilustração Gerada</h3>
-                        <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Gostou? Aprove para salvar no seu acervo!</p>
-                    </div>
-                    <img src={iaPreview.url} alt="Ilustração gerada"
-                        style={{ width: "100%", display: "block", borderRadius: 16, marginBottom: 16 }} />
-                    <p style={{ fontSize: 12, color: C.textMut, fontStyle: "italic", marginBottom: 16 }}>
-                        &ldquo;{iaPrompt}&rdquo;
-                    </p>
-
-                    {/* Debug — admin only */}
-                    {isAdmin && iaPreview.debug && (
-                        <details style={{ marginBottom: 16, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-                            <summary style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: C.pinkLt }}>
-                                🔍 Debug — O que foi enviado para a IA
-                            </summary>
-                            <div style={{ padding: "12px 14px", fontSize: 12, color: C.textMut, lineHeight: 1.6 }}>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Modelo:</strong> {iaPreview.debug.model}
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>PRD do Sistema:</strong>
-                                    <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.systemPrd}</pre>
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Estilo Visual:</strong>
-                                    <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.stylePrompt}</pre>
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Prompt do Participante:</strong>
-                                    <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.userPrompt}</pre>
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Prompt Combinado (enviado):</strong>
-                                    <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.combinedPrompt}</pre>
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Participantes ({iaPreview.debug.participantes.length}):</strong>
-                                    <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
-                                        {iaPreview.debug.participantes.map((p, i) => (
-                                            <li key={i}>{p.nome} — {p.fotos} foto(s) enviada(s)</li>
-                                        ))}
-                                        {iaPreview.debug.participantes.length === 0 && <li style={{ color: C.textDim }}>Nenhum selecionado</li>}
-                                    </ul>
-                                </div>
-                                <div style={{ marginBottom: 10 }}>
-                                    <strong style={{ color: C.text }}>Extras ({iaPreview.debug.extras.length}):</strong>
-                                    <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
-                                        {iaPreview.debug.extras.map((e, i) => (
-                                            <li key={i}>{e.nome} — {e.temFoto ? "✓ foto enviada" : "✗ sem foto"}</li>
-                                        ))}
-                                        {iaPreview.debug.extras.length === 0 && <li style={{ color: C.textDim }}>Nenhum selecionado</li>}
-                                    </ul>
-                                </div>
-                                <div>
-                                    <strong style={{ color: C.text }}>Total de parts no payload:</strong> {iaPreview.debug.totalParts}
-                                </div>
+                        {extras.length > 0 && <>
+                            <label style={labelSt}>Extras ({iaSelExtras.length} selecionados)</label>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+                                {extras.map(e => {
+                                    const sel = iaSelExtras.includes(e.id);
+                                    return (
+                                        <button key={e.id} onClick={() => toggleIaExtra(e.id)}
+                                            style={{
+                                                display: "flex", flexDirection: "column", alignItems: "center",
+                                                width: 64, padding: "6px 4px", borderRadius: 12, cursor: "pointer",
+                                                background: sel ? C.pinkDim : C.card,
+                                                border: sel ? `2px solid ${C.pink}` : `1px solid ${C.border}`,
+                                                transition: "all .15s",
+                                            }}>
+                                            {e.foto ? (
+                                                <img src={e.foto} alt={e.nome}
+                                                    style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover" }} />
+                                            ) : (
+                                                <div style={{ width: 44, height: 44, borderRadius: 8, background: C.pinkDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: C.text }}>
+                                                    {e.nome?.[0]}
+                                                </div>
+                                            )}
+                                            <div style={{ fontSize: 9, color: sel ? C.pinkLt : C.textMut, fontWeight: 600, marginTop: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 56, textAlign: "center" }}>
+                                                {e.nome}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
-                        </details>
-                    )}
+                        </>}
 
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Btn onClick={aprovarIlustracao} disabled={iaSaving} style={{ flex: 1, background: C.green }}>
-                            {iaSaving ? "Salvando..." : "✓ Aprovar e Salvar"}
-                        </Btn>
-                        <Btn onClick={() => { setIaPreview(null); setShowIaModal(true); }}
-                            color={C.surface} textColor={C.pinkLt}
-                            style={{ flex: 1, border: `1px solid ${C.borderHi}` }}>
-                            ↩ Refazer
-                        </Btn>
-                    </div>
-                </Modal>
-            )
-            }
-
-            {/* ══ MODAL: Galeria — Fullscreen view ══ */}
-            {galeriaView && (
-                <Modal onClose={() => setGaleriaView(null)}>
-                    <div style={{ textAlign: "center", marginBottom: 12 }}>
-                        <div style={{ fontSize: 36, marginBottom: 4 }}>🖼️</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 17 }}>{galeriaView.autor?.nome || "Anônimo"}</h3>
-                        <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 6 }}>
-                            {galeriaView.estilo && (
-                                <span style={{ fontSize: 12, color: C.pinkLt, fontWeight: 600 }}>🎨 {galeriaView.estilo}</span>
-                            )}
-                            <span style={{ fontSize: 12, color: C.textMut }}>
-                                {new Date(galeriaView.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}{" "}
-                                {new Date(galeriaView.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                        </div>
-                    </div>
-                    <img src={galeriaView.url} alt="Ilustração"
-                        style={{ width: "100%", display: "block", borderRadius: 16, marginBottom: 12 }} />
-                    {galeriaView.prompt && (
-                        <p style={{ fontSize: 12, color: C.textMut, fontStyle: "italic", marginBottom: 16, lineHeight: 1.5 }}>
-                            &ldquo;{galeriaView.prompt}&rdquo;
-                        </p>
-                    )}
-                    <div style={{ display: "flex", gap: 10 }}>
-                        <Btn onClick={() => copyImageToClipboard(galeriaView.url, showToast)}
-                            style={{ flex: 1, background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)" }}>
-                            📋 Copiar Imagem
-                        </Btn>
-                        <Btn onClick={() => setGaleriaView(null)}
-                            color={C.surface} textColor={C.textMut}
-                            style={{ flex: 1, border: `1px solid ${C.border}` }}>
-                            Fechar
-                        </Btn>
-                    </div>
-                    {isAdmin && (
-                        <Btn onClick={() => deleteIlustracao(galeriaView.id)}
-                            color="transparent" textColor="#E74C3C"
-                            style={{ width: "100%", marginTop: 10, border: "1px solid #E74C3C", fontSize: 13 }}>
-                            🗑️ Excluir Ilustração
-                        </Btn>
-                    )}
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Ver prompt da ilustração ══ */}
-            {promptView && (
-                <Modal onClose={() => setPromptView(null)}>
-                    <div style={{ textAlign: "center", marginBottom: 16 }}>
-                        <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
-                        <h3 style={{ margin: 0, color: C.text, fontSize: 17 }}>Prompt da Ilustração</h3>
-                        <p style={{ color: C.textMut, fontSize: 12, margin: "6px 0 0" }}>
-                            por {promptView.autor}{promptView.estilo ? ` · ${promptView.estilo}` : ""}
-                        </p>
-                    </div>
-                    <div style={{
-                        background: C.surface, borderRadius: 12, padding: "16px 20px",
-                        border: `1px solid ${C.border}`, marginBottom: 16
-                    }}>
-                        <p style={{
-                            color: C.text, fontSize: 14, lineHeight: 1.6,
-                            fontStyle: "italic", margin: 0, whiteSpace: "pre-wrap"
-                        }}>
-                            &ldquo;{promptView.prompt}&rdquo;
-                        </p>
-                    </div>
-                    <Btn onClick={() => setPromptView(null)}
-                        style={{ width: "100%", background: C.card, border: `1px solid ${C.border}`, color: C.text }}>
-                        Fechar
-                    </Btn>
-                </Modal>
-            )}
-
-            {/* ══ MODAL: Confirmar delete ══ */}
-            {
-                delId !== null && (
-                    <Modal onClose={() => setDelId(null)}>
-                        <div style={{ textAlign: "center", paddingBottom: 8 }}>
-                            <div style={{ fontSize: 44, marginBottom: 12 }}>🗑️</div>
-                            <h3 style={{ margin: "0 0 6px", color: C.text, fontSize: 18 }}>Remover participante?</h3>
-                            <p style={{ color: C.textMut, fontSize: 14, marginBottom: 24 }}>
-                                {parts.find(p => p.id === delId)?.nome}
-                            </p>
-                            <div style={{ display: "flex", gap: 10 }}>
-                                <Btn onClick={confirmDel} color={C.red} style={{ flex: 1 }}>Remover</Btn>
-                                <Btn onClick={() => setDelId(null)} color={C.surface} textColor={C.textMut}
-                                    style={{ border: `1px solid ${C.border}`, flex: 1 }}>Cancelar</Btn>
+                        {/* Alerta quando muitos elementos selecionados */}
+                        {(iaSelParts.length + iaSelExtras.length) > 5 && (
+                            <div className="ia-warning" style={{
+                                background: "rgba(184,120,72,0.12)", border: `1px solid rgba(184,120,72,0.35)`,
+                                color: "#B87848",
+                            }}>
+                                ⚠️ Você selecionou {iaSelParts.length + iaSelExtras.length} elementos. Mais de 5 pode prejudicar a coerência da ilustração gerada.
                             </div>
+                        )}
+
+                        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+                            <Btn onClick={() => setShowIaModal(false)}
+                                style={{ flex: 1, background: C.card, border: `1px solid ${C.border}`, color: C.text }}>
+                                Cancelar
+                            </Btn>
+                            <Btn onClick={gerarIlustracao} disabled={!iaPrompt.trim() || iaGenerating}
+                                style={{ flex: 2, background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)" }}>
+                                {iaGenerating ? "⏳ Gerando..." : "🎨 Gerar Ilustração"}
+                            </Btn>
+                        </div>
+                    </Modal>
+                )}
+                {iaGenerating && <Spinner message="Gerando Ilustração com IA..." />}
+
+                {/* ══ MODAL: Preview e aprovação da ilustração ══ */}
+                {iaPreview && (
+                    <Modal onClose={() => setIaPreview(null)}>
+                        <div style={{ textAlign: "center", marginBottom: 16 }}>
+                            <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 18 }}>Ilustração Gerada</h3>
+                            <p style={{ color: C.textMut, fontSize: 13, margin: "6px 0 0" }}>Gostou? Aprove para salvar no seu acervo!</p>
+                        </div>
+                        <img src={iaPreview.url} alt="Ilustração gerada"
+                            style={{ width: "100%", display: "block", borderRadius: 16, marginBottom: 16 }} />
+                        <p style={{ fontSize: 12, color: C.textMut, fontStyle: "italic", marginBottom: 16 }}>
+                            &ldquo;{iaPrompt}&rdquo;
+                        </p>
+
+                        {/* Debug — admin only */}
+                        {isAdmin && iaPreview.debug && (
+                            <details style={{ marginBottom: 16, background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+                                <summary style={{ padding: "10px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: C.pinkLt }}>
+                                    🔍 Debug — O que foi enviado para a IA
+                                </summary>
+                                <div style={{ padding: "12px 14px", fontSize: 12, color: C.textMut, lineHeight: 1.6 }}>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Modelo:</strong> {iaPreview.debug.model}
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>PRD do Sistema:</strong>
+                                        <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.systemPrd}</pre>
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Estilo Visual:</strong>
+                                        <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.stylePrompt}</pre>
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Prompt do Participante:</strong>
+                                        <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.userPrompt}</pre>
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Prompt Combinado (enviado):</strong>
+                                        <pre style={{ margin: "4px 0 0", padding: 10, background: "rgba(0,0,0,0.3)", borderRadius: 8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontSize: 11, fontFamily: "monospace", color: C.textDim, maxHeight: 150, overflowY: "auto" }}>{iaPreview.debug.combinedPrompt}</pre>
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Participantes ({iaPreview.debug.participantes.length}):</strong>
+                                        <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+                                            {iaPreview.debug.participantes.map((p, i) => (
+                                                <li key={i}>{p.nome} — {p.fotos} foto(s) enviada(s)</li>
+                                            ))}
+                                            {iaPreview.debug.participantes.length === 0 && <li style={{ color: C.textDim }}>Nenhum selecionado</li>}
+                                        </ul>
+                                    </div>
+                                    <div style={{ marginBottom: 10 }}>
+                                        <strong style={{ color: C.text }}>Extras ({iaPreview.debug.extras.length}):</strong>
+                                        <ul style={{ margin: "4px 0 0", paddingLeft: 20 }}>
+                                            {iaPreview.debug.extras.map((e, i) => (
+                                                <li key={i}>{e.nome} — {e.temFoto ? "✓ foto enviada" : "✗ sem foto"}</li>
+                                            ))}
+                                            {iaPreview.debug.extras.length === 0 && <li style={{ color: C.textDim }}>Nenhum selecionado</li>}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <strong style={{ color: C.text }}>Total de parts no payload:</strong> {iaPreview.debug.totalParts}
+                                    </div>
+                                </div>
+                            </details>
+                        )}
+
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <Btn onClick={aprovarIlustracao} disabled={iaSaving} style={{ flex: 1, background: C.green }}>
+                                {iaSaving ? "Salvando..." : "✓ Aprovar e Salvar"}
+                            </Btn>
+                            <Btn onClick={() => { setIaPreview(null); setShowIaModal(true); }}
+                                color={C.surface} textColor={C.pinkLt}
+                                style={{ flex: 1, border: `1px solid ${C.borderHi}` }}>
+                                ↩ Refazer
+                            </Btn>
                         </div>
                     </Modal>
                 )
-            }
+                }
+
+                {/* ══ MODAL: Galeria — Fullscreen view ══ */}
+                {galeriaView && (
+                    <Modal onClose={() => setGaleriaView(null)}>
+                        <div style={{ textAlign: "center", marginBottom: 12 }}>
+                            <div style={{ fontSize: 36, marginBottom: 4 }}>🖼️</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 17 }}>{galeriaView.autor?.nome || "Anônimo"}</h3>
+                            <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 6 }}>
+                                {galeriaView.estilo && (
+                                    <span style={{ fontSize: 12, color: C.pinkLt, fontWeight: 600 }}>🎨 {galeriaView.estilo}</span>
+                                )}
+                                <span style={{ fontSize: 12, color: C.textMut }}>
+                                    {new Date(galeriaView.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}{" "}
+                                    {new Date(galeriaView.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                                </span>
+                            </div>
+                        </div>
+                        <img src={galeriaView.url} alt="Ilustração"
+                            style={{ width: "100%", display: "block", borderRadius: 16, marginBottom: 12 }} />
+                        {galeriaView.prompt && (
+                            <p style={{ fontSize: 12, color: C.textMut, fontStyle: "italic", marginBottom: 16, lineHeight: 1.5 }}>
+                                &ldquo;{galeriaView.prompt}&rdquo;
+                            </p>
+                        )}
+                        <div style={{ display: "flex", gap: 10 }}>
+                            <Btn onClick={() => copyImageToClipboard(galeriaView.url, showToast)}
+                                style={{ flex: 1, background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)" }}>
+                                📋 Copiar Imagem
+                            </Btn>
+                            <Btn onClick={() => setGaleriaView(null)}
+                                color={C.surface} textColor={C.textMut}
+                                style={{ flex: 1, border: `1px solid ${C.border}` }}>
+                                Fechar
+                            </Btn>
+                        </div>
+                        {isAdmin && (
+                            <Btn onClick={() => deleteIlustracao(galeriaView.id)}
+                                color="transparent" textColor="#E74C3C"
+                                style={{ width: "100%", marginTop: 10, border: "1px solid #E74C3C", fontSize: 13 }}>
+                                🗑️ Excluir Ilustração
+                            </Btn>
+                        )}
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Ver prompt da ilustração ══ */}
+                {promptView && (
+                    <Modal onClose={() => setPromptView(null)}>
+                        <div style={{ textAlign: "center", marginBottom: 16 }}>
+                            <div style={{ fontSize: 40, marginBottom: 8 }}>✨</div>
+                            <h3 style={{ margin: 0, color: C.text, fontSize: 17 }}>Prompt da Ilustração</h3>
+                            <p style={{ color: C.textMut, fontSize: 12, margin: "6px 0 0" }}>
+                                por {promptView.autor}{promptView.estilo ? ` · ${promptView.estilo}` : ""}
+                            </p>
+                        </div>
+                        <div style={{
+                            background: C.surface, borderRadius: 12, padding: "16px 20px",
+                            border: `1px solid ${C.border}`, marginBottom: 16
+                        }}>
+                            <p style={{
+                                color: C.text, fontSize: 14, lineHeight: 1.6,
+                                fontStyle: "italic", margin: 0, whiteSpace: "pre-wrap"
+                            }}>
+                                &ldquo;{promptView.prompt}&rdquo;
+                            </p>
+                        </div>
+                        <Btn onClick={() => setPromptView(null)}
+                            style={{ width: "100%", background: C.card, border: `1px solid ${C.border}`, color: C.text }}>
+                            Fechar
+                        </Btn>
+                    </Modal>
+                )}
+
+                {/* ══ MODAL: Confirmar delete ══ */}
+                {
+                    delId !== null && (
+                        <Modal onClose={() => setDelId(null)}>
+                            <div style={{ textAlign: "center", paddingBottom: 8 }}>
+                                <div style={{ fontSize: 44, marginBottom: 12 }}>🗑️</div>
+                                <h3 style={{ margin: "0 0 6px", color: C.text, fontSize: 18 }}>Remover participante?</h3>
+                                <p style={{ color: C.textMut, fontSize: 14, marginBottom: 24 }}>
+                                    {parts.find(p => p.id === delId)?.nome}
+                                </p>
+                                <div style={{ display: "flex", gap: 10 }}>
+                                    <Btn onClick={confirmDel} color={C.red} style={{ flex: 1 }}>Remover</Btn>
+                                    <Btn onClick={() => setDelId(null)} color={C.surface} textColor={C.textMut}
+                                        style={{ border: `1px solid ${C.border}`, flex: 1 }}>Cancelar</Btn>
+                                </div>
+                            </div>
+                        </Modal>
+                    )
+                }
         </div >
     );
 }
