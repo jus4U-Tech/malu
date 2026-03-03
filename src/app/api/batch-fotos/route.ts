@@ -48,7 +48,7 @@ export async function POST() {
         const results: { id: string; nome: string; status: string }[] = [];
         let processed = 0;
         let failed = 0;
-        const model = "gemini-2.5-flash-image";
+        const model = "gemini-3.1-flash-image-preview";
 
         for (const foto of fotos || []) {
             const nome = nameMap.get(foto.participanteId) || "?";

@@ -24,8 +24,8 @@ export async function POST(req: NextRequest) {
 
 Aplique a instrução acima na imagem fornecida. Retorne APENAS a imagem resultante.`;
 
-        // gemini-2.5-flash-image — modelo que comprovadamente retorna imagens via API
-        const model = "gemini-2.5-flash-image";
+        // Nano Banana 2 — Gemini 3.1 Flash Image (fev/2026)
+        const model = "gemini-3.1-flash-image-preview";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
         console.log(`[foto] Processando com modelo ${model}...`);
