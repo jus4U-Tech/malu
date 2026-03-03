@@ -1,7 +1,4 @@
 // src/app/api/sync/route.ts
-// Rota que retorna todos os dados de uma vez para carregar o app
-// Usa Supabase REST API (funciona no Vercel) com service_role key (server-side)
-// NOTA: Fotos são retornadas como referências /api/foto/ID para evitar 85MB de base64
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -9,35 +6,37 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        const [partsRes, extrasRes, configRes] = await Promise.all([
-            supabase
-                .from("participantes")
-                .select("id, nome, palpite, fotos(id, ordem)")
-                .order("nome"),
-            supabase
-                .from("elementos_extras")
-                .select("id, nome, descricao, foto")
-                .order("createdAt"),
-            supabase
-                .from("config")
-                .select("*")
-                .eq("id", "singleton")
-                .single(),
-        ]);
+        // Queries sequenciais (debug: Promise.all pode causar timeout parcial)
+        const partsRes = await supabase
+            .from("participantes")
+            .select("id, nome, palpite, fotos(id, ordem)")
+            .order("nome");
+
+        const extrasRes = await supabase
+            .from("elementos_extras")
+            .select("id, nome, descricao, foto")
+            .order("createdAt");
+
+        const configRes = await supabase
+            .from("config")
+            .select("*")
+            .eq("id", "singleton")
+            .single();
+
+        // Debug log
+        console.log("SYNC partsRes:", partsRes.data?.length, "err:", partsRes.error?.message);
+        console.log("SYNC extrasRes:", extrasRes.data?.length, "err:", extrasRes.error?.message);
 
         if (partsRes.error) throw partsRes.error;
         if (extrasRes.error) throw extrasRes.error;
 
-        console.log("SYNC:", partsRes.data?.length, "parts", extrasRes.data?.length, "extras");
-
-        // Fotos: retorna /api/foto/ID ao invés de base64 para reduzir de 85MB para <1MB
-        const parts = (partsRes.data || []).map((p) => ({
+        const parts = (partsRes.data || []).map((p: any) => ({
             id: p.id,
             nome: p.nome,
             palpite: p.palpite || "",
             fotos: (p.fotos || [])
-                .sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem)
-                .map((f: { id: string }) => `/api/foto/${f.id}`),
+                .sort((a: any, b: any) => a.ordem - b.ordem)
+                .map((f: any) => `/api/foto/${f.id}`),
         }));
 
         const cfg = configRes.data || {
@@ -47,25 +46,33 @@ export async function GET() {
             appUrl: "",
         };
 
-        return NextResponse.json({
-            parts,
-            extras: (extrasRes.data || []).map((e) => ({
-                id: e.id,
-                nome: e.nome,
-                descricao: e.descricao || "",
-                foto: e.foto || "",
-            })),
-            cfg: {
-                prdFotos: cfg.prdFotos || "",
-                prdIlustracoes: cfg.prdIlustracoes || "",
-                appName: cfg.appName || "Big Brother Malú",
-                appUrl: cfg.appUrl || "",
-            },
-        });
-    } catch (error) {
-        console.error(error);
         return NextResponse.json(
-            { error: "Erro ao sincronizar" },
+            {
+                _debug: { partsCount: partsRes.data?.length, extrasCount: extrasRes.data?.length },
+                parts,
+                extras: (extrasRes.data || []).map((e: any) => ({
+                    id: e.id,
+                    nome: e.nome,
+                    descricao: e.descricao || "",
+                    foto: e.foto || "",
+                })),
+                cfg: {
+                    prdFotos: cfg.prdFotos || "",
+                    prdIlustracoes: cfg.prdIlustracoes || "",
+                    appName: cfg.appName || "Big Brother Malú",
+                    appUrl: cfg.appUrl || "",
+                },
+            },
+            {
+                headers: {
+                    "Cache-Control": "no-store, no-cache, must-revalidate",
+                },
+            }
+        );
+    } catch (error) {
+        console.error("SYNC ERROR:", error);
+        return NextResponse.json(
+            { error: "Erro ao sincronizar", detail: error instanceof Error ? error.message : String(error) },
             { status: 500 }
         );
     }
