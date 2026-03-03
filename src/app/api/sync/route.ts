@@ -6,37 +6,35 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        // Client criado inline para garantir que env vars estão carregadas
         const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
         const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
         const supabase = createClient(url, key);
 
-        const partsRes = await supabase
-            .from("participantes")
-            .select("id, nome, palpite, fotos(id, ordem)")
-            .order("nome");
-
-        const extrasRes = await supabase
-            .from("elementos_extras")
-            .select("id, nome, descricao, foto")
-            .order("createdAt");
-
-        const configRes = await supabase
-            .from("config")
-            .select("*")
-            .eq("id", "singleton")
-            .single();
+        // Queries separadas (o join fotos(id,ordem) causa timeout/empty no Supabase free)
+        const [partsRes, fotosRes, extrasRes, configRes] = await Promise.all([
+            supabase.from("participantes").select("id, nome, palpite").order("nome"),
+            supabase.from("fotos").select("id, participanteId, ordem").order("ordem"),
+            supabase.from("elementos_extras").select("id, nome, descricao, foto").order("createdAt"),
+            supabase.from("config").select("*").eq("id", "singleton").single(),
+        ]);
 
         if (partsRes.error) throw partsRes.error;
+        if (fotosRes.error) throw fotosRes.error;
         if (extrasRes.error) throw extrasRes.error;
+
+        // Agrupar fotos por participante
+        const fotosByPart = new Map<string, string[]>();
+        for (const f of fotosRes.data || []) {
+            const arr = fotosByPart.get(f.participanteId) || [];
+            arr.push(`/api/foto/${f.id}`);
+            fotosByPart.set(f.participanteId, arr);
+        }
 
         const parts = (partsRes.data || []).map((p: any) => ({
             id: p.id,
             nome: p.nome,
             palpite: p.palpite || "",
-            fotos: (p.fotos || [])
-                .sort((a: any, b: any) => a.ordem - b.ordem)
-                .map((f: any) => `/api/foto/${f.id}`),
+            fotos: fotosByPart.get(p.id) || [],
         }));
 
         const cfg = configRes.data || {
