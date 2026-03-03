@@ -144,8 +144,9 @@ export async function POST(req: NextRequest) {
         const data = await res.json();
 
         if (!res.ok) {
-            console.error("[gerar-ilustracao] API error:", JSON.stringify(data).slice(0, 500));
-            return NextResponse.json({ error: `Gemini API ${res.status}` }, { status: 502 });
+            const errDetail = data?.error?.message || JSON.stringify(data).slice(0, 300);
+            console.error("[gerar-ilustracao] API error:", res.status, errDetail);
+            return NextResponse.json({ error: `Gemini API ${res.status}: ${errDetail}` }, { status: 502 });
         }
 
         // Extrair imagem gerada
