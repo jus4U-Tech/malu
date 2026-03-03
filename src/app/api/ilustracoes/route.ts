@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
         if (error) throw error;
 
         // Buscar nomes dos autores
-        const autorIds = [...new Set((data || []).map((i: any) => i.autorId))];
+        const autorIds = Array.from(new Set((data || []).map((i: any) => i.autorId)));
         const { data: autores } = await supabase
             .from("participantes")
             .select("id, nome")
