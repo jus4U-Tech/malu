@@ -1,33 +1,27 @@
-// src/app/api/debug/route.ts — TEMPORARY debug route
+// src/app/api/debug/route.ts — TEMPORARY
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-    // Test the exact same query as sync route
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const supabase = createClient(url, key);
+
+    // Sem limit — mesmo que sync
     const partsRes = await supabase
         .from("participantes")
         .select("id, nome, palpite, fotos(id, ordem)")
-        .order("nome")
-        .limit(3);
-
-    const plainRes = await supabase
-        .from("participantes")
-        .select("id, nome, palpite")
-        .order("nome")
-        .limit(3);
+        .order("nome");
 
     return NextResponse.json({
-        withJoin: {
-            count: partsRes.data?.length ?? -1,
-            error: partsRes.error?.message || null,
-            data: partsRes.data,
-        },
-        plain: {
-            count: plainRes.data?.length ?? -1,
-            error: plainRes.error?.message || null,
-            data: plainRes.data,
-        },
+        url: url.substring(0, 30),
+        keyLen: key.length,
+        count: partsRes.data?.length ?? -1,
+        error: partsRes.error?.message || null,
+        status: partsRes.status,
+        statusText: partsRes.statusText,
+        first: partsRes.data?.[0] || null,
     });
 }
