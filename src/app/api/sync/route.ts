@@ -9,12 +9,12 @@ export async function GET() {
         const [partsRes, extrasRes, configRes] = await Promise.all([
             supabase
                 .from("participantes")
-                .select("id, nome, palpite, created_at, fotos(id, url, ordem)")
+                .select("id, nome, palpite, fotos(id, url, ordem)")
                 .order("nome"),
             supabase
                 .from("elementos_extras")
-                .select("id, nome, descricao, foto, created_at")
-                .order("created_at"),
+                .select("id, nome, descricao, foto")
+                .order("createdAt"),
             supabase
                 .from("config")
                 .select("*")
