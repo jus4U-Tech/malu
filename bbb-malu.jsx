@@ -984,17 +984,32 @@ export default function App() {
                                         <img src={il.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                                     </div>
                                     <div style={{ padding: "10px 12px" }}>
-                                        <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 2 }}>
-                                            {il.autor?.nome || "Anônimo"}
-                                        </div>
-                                        {il.estilo && (
-                                            <div style={{ fontSize: 11, color: C.pinkLt, fontWeight: 600, marginBottom: 2 }}>
-                                                🎨 {il.estilo}
+                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: 700, fontSize: 13, color: C.text, marginBottom: 2 }}>
+                                                    {il.autor?.nome || "Anônimo"}
+                                                </div>
+                                                {il.estilo && (
+                                                    <div style={{ fontSize: 11, color: C.pinkLt, fontWeight: 600, marginBottom: 2 }}>
+                                                        🎨 {il.estilo}
+                                                    </div>
+                                                )}
+                                                <div style={{ fontSize: 11, color: C.textMut, marginBottom: 6 }}>
+                                                    {new Date(il.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}{" "}
+                                                    {new Date(il.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                                                </div>
                                             </div>
-                                        )}
-                                        <div style={{ fontSize: 11, color: C.textMut, marginBottom: 6 }}>
-                                            {new Date(il.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" })}{" "}
-                                            {new Date(il.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                                            {il.prompt && (
+                                                <button onClick={(e) => { e.stopPropagation(); alert(`💬 Prompt:\n\n"${il.prompt}"`); }}
+                                                    title="Ver prompt usado"
+                                                    style={{
+                                                        background: "linear-gradient(135deg, #6B4CE6 0%, #D4567A 100%)",
+                                                        border: "none", borderRadius: 8, padding: "4px 8px",
+                                                        fontSize: 14, cursor: "pointer", flexShrink: 0, marginLeft: 8,
+                                                    }}>
+                                                    ✨
+                                                </button>
+                                            )}
                                         </div>
                                         <button onClick={async (e) => {
                                             e.stopPropagation();
