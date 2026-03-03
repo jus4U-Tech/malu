@@ -59,7 +59,7 @@ export async function GET() {
         });
     } catch (error) {
         console.error(error);
-        const msg = error instanceof Error ? error.message : String(error);
+        const msg = error instanceof Error ? error.message : JSON.stringify(error);
         return NextResponse.json(
             { error: "Erro ao sincronizar", detail: msg },
             { status: 500 }
