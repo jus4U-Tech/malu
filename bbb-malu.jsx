@@ -175,11 +175,12 @@ const labelSt = {
 };
 
 // ── Spinner ───────────────────────────────────────────────────────────────────
-function Spinner() {
+function Spinner({ message } = {}) {
     return (
         <div style={{
             position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            background: "rgba(8,3,6,0.72)", backdropFilter: "blur(6px)", zIndex: 9999
+            flexDirection: "column", gap: 20,
+            background: "rgba(8,3,6,0.82)", backdropFilter: "blur(8px)", zIndex: 9999
         }}>
             <style>{`@keyframes bbb-spin{to{transform:rotate(360deg)}}`}</style>
             <div style={{
@@ -188,6 +189,7 @@ function Spinner() {
                 borderTopColor: C.pinkLt,
                 animation: "bbb-spin 0.75s linear infinite"
             }} />
+            {message && <p style={{ color: C.text, fontSize: 16, fontWeight: 600, margin: 0, textAlign: "center", padding: "0 24px" }}>{message}</p>}
         </div>
     );
 }
@@ -875,7 +877,7 @@ export default function App() {
 
                     {/* Stats / Filtros */}
                     <div className="stats-bar" style={{ borderTop: `1px solid ${C.border}` }}>
-                        {[["Todos", "🎉", parts.length], ...Object.entries(counts).map(([s, n]) => [s, STATUS_CFG[s].icon, n]), ["Extras", "🎭", extras.length], ["Ilustrações", "🖼️", galeria.length]].map(([s, icon, n]) => (
+                        {[["Todos", "🎉", parts.length], ...Object.entries(counts).map(([s, n]) => [s, STATUS_CFG[s].icon, n]), ["Extras", "🎭", extras.length], ["Ilustrações", "🖼️", galeria.filter(il => il.url && il.url.startsWith("data:")).length]].map(([s, icon, n]) => (
                             <button key={s} onClick={() => setFilter(filter === s ? "Todos" : s)}
                                 style={{
                                     flex: 1, background: "none", border: "none", padding: "6px 2px", cursor: "pointer",
@@ -955,7 +957,7 @@ export default function App() {
                         </div>
                     ) : (
                         <div className="card-grid">
-                            {galeria.map(il => (
+                            {galeria.filter(il => il.url && il.url.startsWith("data:")).map(il => (
                                 <div key={il.id} style={{
                                     background: C.card, borderRadius: 16, overflow: "hidden",
                                     border: `1px solid ${C.border}`, transition: "transform .2s, box-shadow .2s",
@@ -1904,7 +1906,7 @@ export default function App() {
                     </div>
                 </Modal>
             )}
-            {iaGenerating && <Spinner />}
+            {iaGenerating && <Spinner message="Gerando Ilustração com IA..." />}
 
             {/* ══ MODAL: Preview e aprovação da ilustração ══ */}
             {iaPreview && (

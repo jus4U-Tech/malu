@@ -91,28 +91,36 @@ export async function POST(req: NextRequest) {
 
         parts.push({ text: descricao });
 
-        // Adicionar imagens dos participantes
+        // Adicionar imagens dos participantes — agrupar por pessoa
         for (const p of participantes) {
             const fotos = p.fotos || [];
+            if (fotos.length === 0) continue;
+
+            // Header identificando a pessoa ANTES das fotos
+            parts.push({ text: `\n\n=== REFERÊNCIA VISUAL: ${p.nome} ===\nAs ${fotos.length} foto(s) a seguir são de "${p.nome}". Use-as para reproduzir fielmente a aparência dessa pessoa na ilustração.` });
+
             for (let i = 0; i < fotos.length; i++) {
                 const foto = fotos[i];
                 if (foto?.url?.startsWith("data:")) {
                     const match = foto.url.match(/^data:([^;]+);base64,(.+)$/);
                     if (match) {
+                        parts.push({ text: `[Foto ${i + 1}/${fotos.length} de ${p.nome}]` });
                         parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
-                        parts.push({ text: `Foto ${i + 1} de: ${p.nome}${fotos.length > 1 ? ` (${fotos.length} fotos no total)` : ""}` });
                     }
                 }
             }
+
+            parts.push({ text: `=== FIM das fotos de ${p.nome} ===\n` });
         }
 
-        // Adicionar imagens dos extras
+        // Adicionar imagens dos extras — mesma estrutura
         for (const e of extras) {
             if (e.foto?.startsWith("data:")) {
                 const match = e.foto.match(/^data:([^;]+);base64,(.+)$/);
                 if (match) {
+                    parts.push({ text: `\n=== REFERÊNCIA VISUAL: ${e.nome} (elemento extra) ===` });
                     parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
-                    parts.push({ text: `A imagem acima é de: ${e.nome}` });
+                    parts.push({ text: `=== FIM das fotos de ${e.nome} ===\n` });
                 }
             }
         }
