@@ -1,10 +1,17 @@
+// src/app/api/gerar-ilustracao/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createClient } from "@supabase/supabase-js";
 
-const prisma = new PrismaClient();
+export const dynamic = "force-dynamic";
+export const maxDuration = 300;
+
+function getSupabase() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    return createClient(url, key);
+}
 
 // POST — gera ilustração via Gemini 2.5 Flash Image
-// Recebe { prompt, participanteIds: string[], extraIds: string[] }
 export async function POST(req: NextRequest) {
     try {
         const { prompt, participanteIds, extraIds, stylePrompt } = await req.json();
@@ -13,59 +20,70 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Prompt é obrigatório" }, { status: 400 });
         }
 
-        const key = process.env.GEMINI_API_KEY;
-        if (!key) {
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (!geminiKey) {
             return NextResponse.json({ error: "GEMINI_API_KEY não configurada" }, { status: 500 });
         }
+
+        const supabase = getSupabase();
 
         // Limitar: máx 4 participantes, 2 extras
         const safePartIds = (participanteIds || []).slice(0, 4);
         const safeExtraIds = (extraIds || []).slice(0, 2);
 
-        // Buscar TODAS as fotos dos participantes selecionados
-        const participantes = safePartIds.length > 0
-            ? await prisma.participante.findMany({
-                where: { id: { in: safePartIds } },
-                include: { fotos: { orderBy: { createdAt: "desc" } } },
-            })
-            : [];
+        // Buscar participantes e suas fotos
+        let participantes: any[] = [];
+        if (safePartIds.length > 0) {
+            const { data: parts } = await supabase
+                .from("participantes")
+                .select("id, nome")
+                .in("id", safePartIds);
 
-        // Buscar fotos dos extras selecionados
-        const extras = safeExtraIds.length > 0
-            ? await prisma.elementoExtra.findMany({
-                where: { id: { in: safeExtraIds } },
-            })
-            : [];
+            const { data: fotos } = await supabase
+                .from("fotos")
+                .select("id, participanteId, url")
+                .in("participanteId", safePartIds)
+                .order("createdAt", { ascending: false });
+
+            participantes = (parts || []).map((p: any) => ({
+                ...p,
+                fotos: (fotos || []).filter((f: any) => f.participanteId === p.id),
+            }));
+        }
+
+        // Buscar extras
+        let extras: any[] = [];
+        if (safeExtraIds.length > 0) {
+            const { data } = await supabase
+                .from("elementos_extras")
+                .select("id, nome, foto")
+                .in("id", safeExtraIds);
+            extras = data || [];
+        }
 
         // Buscar config para o PRD do sistema
-        const appConfig = await prisma.config.findUnique({ where: { id: "singleton" } });
+        const { data: appConfig } = await supabase
+            .from("config")
+            .select("prdIlustracoes")
+            .eq("id", "singleton")
+            .single();
         const systemPrd = appConfig?.prdIlustracoes?.trim() || "";
 
         // Montar parts do payload
         const parts: Array<Record<string, unknown>> = [];
 
-        // Construir descrição das pessoas/elementos na cena
-        // PRD do sistema tem prioridade, prompt do participante é complementar
         let descricao = "";
-
         if (systemPrd) {
             descricao += `INSTRUÇÃO PRINCIPAL DO SISTEMA (prioridade máxima):\n${systemPrd}\n\n`;
         }
-
         if (stylePrompt?.trim()) {
             descricao += `ESTILO VISUAL (aplicar obrigatoriamente):\n${stylePrompt.trim()}\n\n`;
         }
-
         descricao += `PROMPT DO PARTICIPANTE (complementar):\n${prompt.trim()}`;
 
         const nomes: string[] = [];
-
-        for (const p of participantes) {
-            nomes.push(p.nome);
-        }
-        for (const e of extras) {
-            nomes.push(e.nome);
-        }
+        for (const p of participantes) nomes.push(p.nome);
+        for (const e of extras) nomes.push(e.nome);
 
         if (nomes.length > 0) {
             descricao += `\n\nAs seguintes pessoas/elementos devem aparecer na ilustração: ${nomes.join(", ")}. Múltiplas fotos de referência podem ser fornecidas para cada pessoa — use TODAS as fotos para capturar a aparência real com máxima fidelidade.`;
@@ -73,70 +91,53 @@ export async function POST(req: NextRequest) {
 
         parts.push({ text: descricao });
 
-        // Adicionar TODAS as imagens de referência dos participantes
+        // Adicionar imagens dos participantes
         for (const p of participantes) {
             const fotos = p.fotos || [];
             for (let i = 0; i < fotos.length; i++) {
                 const foto = fotos[i];
-                if (foto?.url) {
-                    if (foto.url.startsWith("data:")) {
-                        const match = foto.url.match(/^data:([^;]+);base64,(.+)$/);
-                        if (match) {
-                            parts.push({
-                                inline_data: { mime_type: match[1], data: match[2] }
-                            });
-                            parts.push({ text: `Foto ${i + 1} de: ${p.nome}${fotos.length > 1 ? ` (${fotos.length} fotos no total)` : ""}` });
-                        }
-                    }
-                }
-            }
-        }
-
-        // Adicionar imagens de referência dos extras
-        for (const e of extras) {
-            if (e.foto) {
-                if (e.foto.startsWith("data:")) {
-                    const match = e.foto.match(/^data:([^;]+);base64,(.+)$/);
+                if (foto?.url?.startsWith("data:")) {
+                    const match = foto.url.match(/^data:([^;]+);base64,(.+)$/);
                     if (match) {
-                        parts.push({
-                            inline_data: { mime_type: match[1], data: match[2] }
-                        });
-                        parts.push({ text: `A imagem acima é de: ${e.nome}` });
+                        parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
+                        parts.push({ text: `Foto ${i + 1} de: ${p.nome}${fotos.length > 1 ? ` (${fotos.length} fotos no total)` : ""}` });
                     }
                 }
             }
         }
 
-        // Debug info para admin
+        // Adicionar imagens dos extras
+        for (const e of extras) {
+            if (e.foto?.startsWith("data:")) {
+                const match = e.foto.match(/^data:([^;]+);base64,(.+)$/);
+                if (match) {
+                    parts.push({ inline_data: { mime_type: match[1], data: match[2] } });
+                    parts.push({ text: `A imagem acima é de: ${e.nome}` });
+                }
+            }
+        }
+
         const debugInfo = {
             systemPrd: systemPrd || "(vazio)",
             stylePrompt: stylePrompt?.trim() || "(nenhum)",
             userPrompt: prompt.trim(),
             combinedPrompt: descricao,
-            participantes: participantes.map(p => ({
-                nome: p.nome,
-                fotos: (p.fotos || []).length,
-            })),
-            extras: extras.map(e => ({
-                nome: e.nome,
-                temFoto: !!e.foto,
-            })),
+            participantes: participantes.map((p: any) => ({ nome: p.nome, fotos: (p.fotos || []).length })),
+            extras: extras.map((e: any) => ({ nome: e.nome, temFoto: !!e.foto })),
             totalParts: parts.length,
             model: "gemini-2.5-flash-image",
         };
 
         // Chamar Gemini
         const model = "gemini-2.5-flash-image";
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`;
 
-        const res = await fetch(url, {
+        const res = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{ parts }],
-                generationConfig: {
-                    responseModalities: ["IMAGE", "TEXT"],
-                },
+                generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
             }),
         });
 
@@ -174,7 +175,6 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // Se não retornou imagem
         const textParts = responseParts.filter((p: Record<string, unknown>) => p.text).map((p: Record<string, unknown>) => p.text);
         console.warn("[gerar-ilustracao] Sem imagem. Texto:", (textParts as string[]).join(" ").slice(0, 300));
         return NextResponse.json({ error: "A IA não gerou uma imagem. Tente outro prompt." }, { status: 422 });
