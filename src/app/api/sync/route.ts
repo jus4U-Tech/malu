@@ -28,6 +28,8 @@ export async function GET() {
         if (partsRes.error) throw partsRes.error;
         if (extrasRes.error) throw extrasRes.error;
 
+        console.log("SYNC:", partsRes.data?.length, "parts", extrasRes.data?.length, "extras");
+
         // Fotos: retorna /api/foto/ID ao invés de base64 para reduzir de 85MB para <1MB
         const parts = (partsRes.data || []).map((p) => ({
             id: p.id,
