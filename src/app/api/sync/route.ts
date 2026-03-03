@@ -1,12 +1,16 @@
 // src/app/api/sync/route.ts
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
     try {
-        // Queries sequenciais (debug: Promise.all pode causar timeout parcial)
+        // Client criado inline para garantir que env vars estão carregadas
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+        const supabase = createClient(url, key);
+
         const partsRes = await supabase
             .from("participantes")
             .select("id, nome, palpite, fotos(id, ordem)")
@@ -22,10 +26,6 @@ export async function GET() {
             .select("*")
             .eq("id", "singleton")
             .single();
-
-        // Debug log
-        console.log("SYNC partsRes:", partsRes.data?.length, "err:", partsRes.error?.message);
-        console.log("SYNC extrasRes:", extrasRes.data?.length, "err:", extrasRes.error?.message);
 
         if (partsRes.error) throw partsRes.error;
         if (extrasRes.error) throw extrasRes.error;
@@ -48,7 +48,6 @@ export async function GET() {
 
         return NextResponse.json(
             {
-                _debug: { partsCount: partsRes.data?.length, extrasCount: extrasRes.data?.length },
                 parts,
                 extras: (extrasRes.data || []).map((e: any) => ({
                     id: e.id,
