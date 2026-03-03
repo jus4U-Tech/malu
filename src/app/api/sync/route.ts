@@ -1,6 +1,7 @@
 // src/app/api/sync/route.ts
 // Rota que retorna todos os dados de uma vez para carregar o app
-// Usa Supabase REST API (funciona no Vercel) com fallback para Prisma (dev local)
+// Usa Supabase REST API (funciona no Vercel) com service_role key (server-side)
+// NOTA: Fotos são retornadas como referências /api/foto/ID para evitar 85MB de base64
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
@@ -11,7 +12,7 @@ export async function GET() {
         const [partsRes, extrasRes, configRes] = await Promise.all([
             supabase
                 .from("participantes")
-                .select("id, nome, palpite, fotos(id, url, ordem)")
+                .select("id, nome, palpite, fotos(id, ordem)")
                 .order("nome"),
             supabase
                 .from("elementos_extras")
@@ -27,14 +28,14 @@ export async function GET() {
         if (partsRes.error) throw partsRes.error;
         if (extrasRes.error) throw extrasRes.error;
 
-        // Normalizar participantes para o formato que o front-end espera
+        // Fotos: retorna /api/foto/ID ao invés de base64 para reduzir de 85MB para <1MB
         const parts = (partsRes.data || []).map((p) => ({
             id: p.id,
             nome: p.nome,
             palpite: p.palpite || "",
             fotos: (p.fotos || [])
                 .sort((a: { ordem: number }, b: { ordem: number }) => a.ordem - b.ordem)
-                .map((f: { url: string }) => f.url),
+                .map((f: { id: string }) => `/api/foto/${f.id}`),
         }));
 
         const cfg = configRes.data || {
