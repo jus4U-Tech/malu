@@ -15,6 +15,16 @@ export async function GET(req: NextRequest) {
     try {
         const supabase = getSupabase();
         const autorId = req.nextUrl.searchParams.get("autorId");
+        const countOnly = req.nextUrl.searchParams.get("countOnly");
+
+        // Fast count-only endpoint for the gallery badge
+        if (countOnly) {
+            let q = supabase.from("ilustracoes").select("id", { count: "exact", head: true });
+            if (autorId) q = q.eq("autorId", autorId);
+            const { count, error } = await q;
+            if (error) throw error;
+            return NextResponse.json({ count: count || 0 });
+        }
 
         let query = supabase
             .from("ilustracoes")

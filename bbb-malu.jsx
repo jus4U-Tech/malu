@@ -282,6 +282,7 @@ export default function App() {
     const [iaStyle, setIaStyle] = useState("pixar");
     const [galeria, setGaleria] = useState([]);
     const [galeriaLoaded, setGaleriaLoaded] = useState(false);
+    const [galeriaCount, setGaleriaCount] = useState(null); // fast count for badge
     const [galeriaView, setGaleriaView] = useState(null); // ilustração selecionada para fullscreen
     const [promptView, setPromptView] = useState(null); // prompt de ilustração para exibir
 
@@ -382,9 +383,20 @@ export default function App() {
             if (res.ok) {
                 const data = await res.json();
                 setGaleria(data);
+                setGaleriaCount(data.filter(il => il.url && il.url.startsWith("data:")).length);
             }
         } catch { /* silencioso */ }
         setGaleriaLoaded(true);
+    };
+
+    const fetchGaleriaCount = async () => {
+        try {
+            const res = await fetch("/api/ilustracoes?countOnly=1");
+            if (res.ok) {
+                const { count } = await res.json();
+                setGaleriaCount(count);
+            }
+        } catch { /* silencioso */ }
     };
 
     const deleteIlustracao = async (id) => {
@@ -404,12 +416,17 @@ export default function App() {
         }
     };
 
-    // Carrega galeria na inicialização (para mostrar contador correto)
+    // Fast count on init, full data loaded lazily when gallery is opened
     useEffect(() => {
-        if (!galeriaLoaded) {
+        fetchGaleriaCount();
+    }, []);
+
+    // Lazy-load full gallery data when user clicks "Ilustrações"
+    useEffect(() => {
+        if (filter === "Ilustrações" && !galeriaLoaded) {
             fetchGaleria();
         }
-    }, []);
+    }, [filter]);
 
     // Mostra modal de identidade no primeiro acesso
     useEffect(() => {
@@ -895,7 +912,7 @@ export default function App() {
 
                     {/* Stats / Filtros */}
                     <div className="stats-bar" style={{ borderTop: `1px solid ${C.border}` }}>
-                        {[["Todos", "🎉", parts.length], ...Object.entries(counts).map(([s, n]) => [s, STATUS_CFG[s].icon, n]), ["Extras", "🎭", extras.length], ["Ilustrações", "🖼️", galeria.filter(il => il.url && il.url.startsWith("data:")).length]].map(([s, icon, n]) => (
+                        {[["Todos", "🎉", parts.length], ...Object.entries(counts).map(([s, n]) => [s, STATUS_CFG[s].icon, n]), ["Extras", "🎭", extras.length], ["Ilustrações", "🖼️", galeriaCount !== null ? galeriaCount : "..."]].map(([s, icon, n]) => (
                             <button key={s} onClick={() => setFilter(filter === s ? "Todos" : s)}
                                 style={{
                                     flex: 1, background: "none", border: "none", padding: "6px 2px", cursor: "pointer",
